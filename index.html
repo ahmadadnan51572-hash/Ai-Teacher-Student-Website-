@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Teacher – Student Study</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Firebase COMPAT SDK (GitHub Pages friendly) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,Segoe UI,Roboto;
+  background:#0f172a;
+  color:#e5e7eb;
+}
+header{
+  background:#020617;
+  padding:16px;
+  text-align:center;
+  font-size:20px;
+  font-weight:600;
+}
+.container{
+  max-width:600px;
+  margin:auto;
+  padding:12px;
+}
+.card{
+  background:#020617;
+  border-radius:14px;
+  padding:14px;
+  margin-bottom:14px;
+  border:1px solid #1e293b;
+}
+input,textarea,select,button{
+  width:100%;
+  padding:12px;
+  margin-top:8px;
+  border-radius:10px;
+  border:1px solid #334155;
+  background:#020617;
+  color:#e5e7eb;
+}
+button{
+  background:#22c55e;
+  color:#020617;
+  font-weight:600;
+  border:none;
+}
+button.gray{background:#334155;color:#e5e7eb}
+.hidden{display:none}
+.note{
+  border:1px solid #334155;
+  border-radius:10px;
+  padding:10px;
+  margin-top:10px;
+}
+small{color:#94a3b8}
+</style>
+
+<script>
+/* 🔥 FIREBASE CONFIG (Aapka) */
+const firebaseConfig = {
+  apiKey: "AIzaSyDTeCt5P9SXSwcxMXJ32D41p1wP7GOrg8g",
+  authDomain: "ai-teacher-student-study.firebaseapp.com",
+  projectId: "ai-teacher-student-study",
+  storageBucket: "ai-teacher-student-study.appspot.com",
+  messagingSenderId: "64182816552",
+  appId: "1:64182816552:web:992ab5e1b0971cf3700a1d"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db   = firebase.firestore();
+</script>
+</head>
+
+<body>
+
+<header>🎓 AI Teacher – Student Study</header>
+
+<div class="container">
+
+<!-- LOGIN / SIGNUP -->
+<div id="authBox" class="card">
+  <h3>Login / Signup</h3>
+  <input id="email" type="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <button class="gray" onclick="signup()">Create Account</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="hidden">
+
+  <div class="card">
+    <button onclick="show('notes')">📘 Notes</button>
+    <button onclick="show('groups')">🏫 Groups</button>
+    <button class="gray" onclick="logout()">Logout</button>
+  </div>
+
+  <!-- NOTES -->
+  <div id="notes" class="card hidden">
+    <h3>📘 Smart Notes</h3>
+
+    <select id="folder">
+      <option>General</option>
+      <option>Maths</option>
+      <option>Science</option>
+      <option>Personal</option>
+    </select>
+
+    <textarea id="noteText" placeholder="Write note..."></textarea>
+    <button onclick="saveNote()">Save Note</button>
+
+    <div id="noteList"></div>
+  </div>
+
+  <!-- GROUPS -->
+  <div id="groups" class="card hidden">
+    <h3>🏫 Teacher Groups</h3>
+    <input id="groupName" placeholder="Group name">
+    <button onclick="createGroup()">Create Group</button>
+    <div id="groupList"></div>
+  </div>
+
+</div>
+</div>
+
+<script>
+let allNotes=[];
+
+/* AUTH */
+function login(){
+  auth.signInWithEmailAndPassword(email.value,password.value)
+    .catch(e=>alert(e.message));
+}
+function signup(){
+  auth.createUserWithEmailAndPassword(email.value,password.value)
+    .then(()=>alert("Account created"))
+    .catch(e=>alert(e.message));
+}
+function logout(){auth.signOut();}
+
+auth.onAuthStateChanged(user=>{
+  if(user){
+    authBox.classList.add("hidden");
+    dashboard.classList.remove("hidden");
+    loadNotes();
+    loadGroups();
+  }else{
+    authBox.classList.remove("hidden");
+    dashboard.classList.add("hidden");
+  }
+});
+
+/* NAV */
+function show(id){
+  ["notes","groups"].forEach(x=>document.getElementById(x).classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+}
+
+/* NOTES */
+function saveNote(){
+  const u=auth.currentUser;
+  if(!u) return;
+
+  db.collection("notes").doc(u.uid).collection("items").add({
+    text:noteText.value,
+    folder:folder.value,
+    time:Date.now()
+  });
+
+  noteText.value="";
+}
+
+function loadNotes(){
+  const u=auth.currentUser;
+  db.collection("notes").doc(u.uid).collection("items")
+  .orderBy("time","desc")
+  .onSnapshot(s=>{
+    noteList.innerHTML="";
+    s.forEach(d=>{
+      const n=d.data();
+      noteList.innerHTML+=`
+        <div class="note">
+          <small>${n.folder}</small>
+          <p>${n.text}</p>
+        </div>`;
+    });
+  });
+}
+
+/* GROUPS */
+function createGroup(){
+  const u=auth.currentUser;
+  db.collection("groups").add({
+    name:groupName.value,
+    teacher:u.uid,
+    time:Date.now()
+  });
+  groupName.value="";
+}
+
+function loadGroups(){
+  db.collection("groups").onSnapshot(s=>{
+    groupList.innerHTML="";
+    s.forEach(d=>{
+      groupList.innerHTML+=`
+        <div class="note">🏫 ${d.data().name}</div>`;
+    });
+  });
+}
+</script>
+
+</body>
+</html>

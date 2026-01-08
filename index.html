@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>GK Study Centre – Ultimate System</title>
+<title>GK Study Centre – Final System</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Firebase -->
+<!-- Firebase (GitHub compatible) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -27,7 +27,7 @@ img{max-width:120px;border-radius:50%;margin:10px 0}
 
 <header>
 <h2>GK Study Centre</h2>
-<p>Attendance • Fees • Admin • Student • Firebase</p>
+<p>Admin | Student | Attendance | Fees | Firebase</p>
 </header>
 
 <nav>
@@ -42,7 +42,7 @@ img{max-width:120px;border-radius:50%;margin:10px 0}
 <option value="admin">Admin</option>
 <option value="student">Student</option>
 </select>
-<input id="lid" placeholder="ID (Student ID / admin)">
+<input id="lid" placeholder="ID (student id / admin)">
 <input id="lpass" type="password" placeholder="Password">
 <button onclick="login()">Login</button>
 <p id="msg"></p>
@@ -93,10 +93,9 @@ img{max-width:120px;border-radius:50%;margin:10px 0}
 <img id="profileImg">
 <p id="sinfo"></p>
 
-<h4>Attendance (Monthly)</h4>
+<h4>Monthly Attendance</h4>
 <input type="month" id="month">
 <button onclick="loadAttendance()">View</button>
-
 <p id="attPercent"></p>
 
 <table>
@@ -110,15 +109,15 @@ img{max-width:120px;border-radius:50%;margin:10px 0}
 </section>
 
 <script>
-/* 🔥 FIREBASE CONFIG – PASTE YOURS */
+/* 🔥 YOUR FIREBASE CONFIG (ALREADY GITHUB READY) */
 firebase.initializeApp({
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT.firebaseio.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "XXX",
-  appId: "XXX"
+  apiKey: "AIzaSyAuW-_QhchJ0wGQKJzYvqCQO8UL9CBJq4E",
+  authDomain: "student-best-ai-teacher.firebaseapp.com",
+  databaseURL: "https://student-best-ai-teacher-default-rtdb.firebaseio.com",
+  projectId: "student-best-ai-teacher",
+  storageBucket: "student-best-ai-teacher.appspot.com",
+  messagingSenderId: "983601405082",
+  appId: "1:983601405082:web:44aaa73bb73470c21f9323"
 });
 const db = firebase.database();
 
@@ -165,9 +164,9 @@ function changeAdminPass(){
 }
 
 function uploadPhoto(e){
- let reader=new FileReader();
- reader.onload=()=>studentPhoto=reader.result;
- reader.readAsDataURL(e.target.files[0]);
+ let r=new FileReader();
+ r.onload=()=>studentPhoto=r.result;
+ r.readAsDataURL(e.target.files[0]);
 }
 
 function addStudent(){
@@ -239,30 +238,3 @@ function loadFees(){
 
 </body>
 </html>
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-<script>
-  // Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyAuW-_QhchJ0wGQKJzYvqCQO8UL9CBJq4E",
-    authDomain: "student-best-ai-teacher.firebaseapp.com",
-    projectId: "student-best-ai-teacher",
-    databaseURL: "https://student-best-ai-teacher-default-rtdb.firebaseio.com",
-    storageBucket: "student-best-ai-teacher.appspot.com",
-    messagingSenderId: "983601405082",
-    appId: "1:983601405082:web:44aaa73bb73470c21f9323",
-    measurementId: "G-ENDC7QGHQ1"
-  };
-
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-
-  // Analytics (optional)
-  firebase.analytics();
-
-  // Realtime Database reference
-  const db = firebase.database();
-</script>

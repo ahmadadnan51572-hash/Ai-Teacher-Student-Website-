@@ -1,128 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>AI Teacher - Student Study</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<title>AI Teacher – Student | Parent | Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: #e5e7eb;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .box {
-      background: #020617;
-      padding: 25px;
-      border-radius: 12px;
-      width: 100%;
-      max-width: 360px;
-      box-shadow: 0 0 20px rgba(0,0,0,.6);
-    }
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 12px;
-      border-radius: 8px;
-      border: none;
-      outline: none;
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      background: #2563eb;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      margin-bottom: 10px;
-    }
-    button:hover {
-      background: #1d4ed8;
-    }
-    .msg {
-      text-align: center;
-      margin-top: 10px;
-      font-size: 14px;
-    }
-  </style>
+<style>
+body{
+  margin:0;
+  font-family:system-ui,Arial;
+  background:#0f172a;
+  color:#e5e7eb;
+}
+.container{
+  max-width:420px;
+  margin:40px auto;
+  background:#020617;
+  padding:20px;
+  border-radius:14px;
+  box-shadow:0 0 30px rgba(0,0,0,.6);
+}
+h2,h3{text-align:center}
+input,select,textarea{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:8px;
+  border:none;
+  outline:none;
+}
+button{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:8px;
+  background:#2563eb;
+  color:white;
+  font-size:16px;
+  cursor:pointer;
+}
+button:hover{background:#1d4ed8}
+.secondary{background:#475569}
+.secondary:hover{background:#334155}
+.danger{background:#dc2626}
+.danger:hover{background:#b91c1c}
+.hidden{display:none}
+.card{
+  background:#020617;
+  padding:15px;
+  border-radius:10px;
+  margin-top:15px;
+}
+.msg{text-align:center;font-size:14px;margin-top:6px}
+.chat{
+  max-height:200px;
+  overflow:auto;
+  background:#020617;
+  padding:10px;
+  border-radius:10px;
+}
+.chat p{margin:6px 0}
+.user{color:#38bdf8}
+.ai{color:#22c55e}
+</style>
 </head>
 
 <body>
 
-  <div class="box">
-    <h2>Login / Signup</h2>
+<div class="container">
 
-    <input type="email" id="email" placeholder="Email" />
-    <input type="password" id="password" placeholder="Password" />
+<!-- AUTH -->
+<div id="authBox">
+  <h2>🎓 AI Teacher Portal</h2>
+  <input id="email" type="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
 
-    <button onclick="signup()">Signup</button>
-    <button onclick="login()">Login</button>
+  <select id="role">
+    <option value="student">Student</option>
+    <option value="parent">Parent</option>
+    <option value="admin">Admin</option>
+  </select>
 
-    <div class="msg" id="message"></div>
+  <button onclick="signup()">Signup</button>
+  <button onclick="login()">Login</button>
+  <div class="msg" id="msg"></div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dash" class="hidden">
+
+  <h3 id="welcome"></h3>
+
+  <!-- RESULT -->
+  <div class="card">
+    <h4>📊 Student Result</h4>
+    <p>Name: Adnan Ahmad</p>
+    <p>Class: 10</p>
+    <p>Maths: 85</p>
+    <p>Science: 88</p>
+    <p>English: 90</p>
+    <b>Total: 263 / 300</b>
   </div>
 
-  <!-- ✅ Firebase COMPAT SDKs (GitHub Pages ke liye correct) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <!-- AI TEACHER -->
+  <div class="card">
+    <h4>🤖 AI Teacher</h4>
+    <div class="chat" id="chat"></div>
+    <textarea id="question" placeholder="Ask your question..."></textarea>
+    <button class="secondary" onclick="askAI()">Ask</button>
+  </div>
 
-  <script>
-    // ✅ Firebase WEB configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyAuW-_QhchJ0wGQKJzYvqCQO8UL9CBJq4E",
-      authDomain: "student-best-ai-teacher.firebaseapp.com",
-      projectId: "student-best-ai-teacher",
-      storageBucket: "student-best-ai-teacher.appspot.com",
-      messagingSenderId: "983601405082",
-      appId: "1:983601405082:web:6f70114f0df68a451f9323"
-    };
+  <!-- ADMIN PANEL -->
+  <div id="adminPanel" class="card hidden">
+    <h4>🛠 Admin Panel</h4>
+    <p>✔ Users monitoring (demo)</p>
+    <p>✔ Results control (demo)</p>
+    <p>✔ System secure</p>
+  </div>
 
-    // ✅ Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
+  <button class="danger" onclick="logout()">Logout</button>
+</div>
 
-    const msg = document.getElementById("message");
+</div>
 
-    function signup() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(() => {
-          msg.innerText = "Signup successful ✅";
-          msg.style.color = "lightgreen";
-        })
-        .catch(error => {
-          msg.innerText = error.message;
-          msg.style.color = "red";
-        });
-    }
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAuW-_QhchJ0wGQKJzYvqCQO8UL9CBJq4E",
+  authDomain: "student-best-ai-teacher.firebaseapp.com",
+  projectId: "student-best-ai-teacher",
+  storageBucket: "student-best-ai-teacher.appspot.com",
+  messagingSenderId: "983601405082",
+  appId: "1:983601405082:web:6f70114f0df68a451f9323"
+};
 
-    function login() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 
-      auth.signInWithEmailAndPassword(email, password)
-        .then(() => {
-          msg.innerText = "Login successful ✅";
-          msg.style.color = "lightgreen";
-        })
-        .catch(error => {
-          msg.innerText = error.message;
-          msg.style.color = "red";
-        });
-    }
-  </script>
+const msg = document.getElementById("msg");
+const authBox = document.getElementById("authBox");
+const dash = document.getElementById("dash");
+const welcome = document.getElementById("welcome");
+const adminPanel = document.getElementById("adminPanel");
+
+function signup(){
+  auth.createUserWithEmailAndPassword(val("email"),val("password"))
+    .then(()=>show("Signup successful","lightgreen"))
+    .catch(e=>show(e.message,"red"));
+}
+
+function login(){
+  const role = val("role");
+  auth.signInWithEmailAndPassword(val("email"),val("password"))
+    .then(()=>{
+      authBox.classList.add("hidden");
+      dash.classList.remove("hidden");
+
+      welcome.innerText =
+        role==="admin" ? "🛠 Admin Dashboard" :
+        role==="parent" ? "👨‍👩‍👦 Parent Dashboard" :
+        "🎓 Student Dashboard";
+
+      if(role==="admin") adminPanel.classList.remove("hidden");
+    })
+    .catch(e=>show(e.message,"red"));
+}
+
+function logout(){
+  auth.signOut().then(()=>{
+    dash.classList.add("hidden");
+    adminPanel.classList.add("hidden");
+    authBox.classList.remove("hidden");
+  });
+}
+
+/* SIMPLE AI TEACHER (Demo Logic) */
+function askAI(){
+  const q = document.getElementById("question").value;
+  if(!q) return;
+  const chat = document.getElementById("chat");
+
+  chat.innerHTML += `<p class="user">You: ${q}</p>`;
+
+  let answer =
+    q.toLowerCase().includes("math") ? "Practice daily and revise formulas." :
+    q.toLowerCase().includes("science") ? "Understand concepts with diagrams." :
+    q.toLowerCase().includes("english") ? "Read daily and practice writing." :
+    "I am your AI Teacher. Ask about Maths, Science or English.";
+
+  chat.innerHTML += `<p class="ai">AI: ${answer}</p>`;
+  document.getElementById("question").value="";
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function val(id){return document.getElementById(id).value}
+function show(t,c){msg.innerText=t;msg.style.color=c}
+</script>
 
 </body>
 </html>

@@ -1,124 +1,311 @@
 <!DOCTYPE html>
-<html>
+<html lang="hi">
 <head>
 <meta charset="UTF-8">
-<title>AI Teacher Portal</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-
+<title>GK Study Centre Ã¢ÂÂ Complete System</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-body{font-family:Arial;background:#0f172a;color:#fff;padding:20px}
-.card{background:#020617;padding:20px;border-radius:12px;max-width:400px;margin:auto}
-input,select,button{width:100%;padding:12px;margin:6px 0;border-radius:6px;border:none}
-button{background:#2563eb;color:#fff;font-size:16px}
-#chat{margin-top:15px}
-.ai{color:#00ff99}
-.you{color:#38bdf8}
+body{font-family:Arial;background:#f2f4f7;margin:0}
+header{background:#0a3d62;color:#fff;text-align:center;padding:15px}
+marquee{background:#1e3799;color:#fff;padding:6px;font-weight:bold}
+nav{background:#34495e;text-align:center;padding:8px}
+nav button{margin:4px;padding:8px 12px;border:0;border-radius:4px;background:#2c3e50;color:#fff}
+section{display:none;padding:15px}
+.card{background:#fff;padding:15px;border-radius:8px;margin-bottom:15px}
+input,select,textarea,button{width:100%;padding:8px;margin:6px 0}
+button{background:#1e3799;color:#fff;border:0;border-radius:4px}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid #ccc;padding:6px;text-align:center}
+.small{font-size:12px;color:#555}
+.lock{background:#eee;padding:8px;border-radius:6px}
+.top a{display:inline-block;margin:5px;padding:8px 10px;background:#25D366;color:#fff;text-decoration:none;border-radius:4px}
 </style>
 </head>
-
 <body>
+<header>
+<h2>GK Coaching Centre</h2>
+<p>Attendance Ã¢ÂÂ¢ Notes Ã¢ÂÂ¢ Fees Ã¢ÂÂ¢ AI (Teacher-Controlled)</p>
+</header>
+<marquee>GK Coaching Centre Ã¢ÂÂ Class 6 to 12 Ã¢ÂÂ Online + Offline</marquee>
 
-<div class="card" id="loginBox">
-<h2>AI Teacher Portal</h2>
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
-<select id="role">
-<option>Student</option>
-<option>Teacher</option>
-</select>
-<button onclick="signup()">Signup</button>
-<button onclick="login()">Login</button>
-<p id="msg" style="color:red"></p>
+<nav>
+<button onclick="show('home')">Home</button>
+<button onclick="show('studentLogin')">Student Login</button>
+<button onclick="show('teacherLogin')">Teacher/Admin</button>
+<button onclick="show('notes')">Notes/Videos</button>
+</nav>
+
+<section id="home" class="card">
+<div class="top">
+<a href="https://wa.me/918840002145">WhatsApp</a>
+<a href="#">Pay Fees</a>
+<a href="#">Download App</a>
+</div>
+<p>Welcome to GK Coaching Centre digital system.</p>
+</section>
+
+<section id="studentLogin" class="card">
+<h3>Student Login</h3>
+<input id="sid" placeholder="Student ID">
+<input id="spass" type="password" placeholder="Password">
+<button onclick="studentLogin()">Login</button>
+</section>
+
+<section id="studentDash" class="card">
+<h3>Student Dashboard</h3>
+<p id="sinfo"></p>
+<p id="satt"></p>
+
+<h4>Class Notes/Videos</h4>
+<div id="snotes"></div>
+
+<h4>Ask Question (AI + Teacher)</h4>
+<textarea id="q" placeholder="Type your question"></textarea>
+<button onclick="askAI()">Send</button>
+<div id="ans" class="small"></div>
+
+<button onclick="logout()">Logout</button>
+</section>
+
+<section id="teacherLogin" class="card">
+<h3>Teacher/Admin Login</h3>
+<input id="tpass" type="password" placeholder="Password">
+<button onclick="teacherLogin()">Login</button>
+<p class="small">Default: 12345 (change in code)</p>
+</section>
+
+<section id="teacherPanel" class="card">
+<h3>Teacher/Admin Panel</h3>
+
+<h4>Add Student</h4>
+<input id="tsid" placeholder="Student ID">
+<input id="tsname" placeholder="Student Name">
+<input id="tfname" placeholder="Father Name">
+<input id="tmname" placeholder="Mother Name">
+<select id="tvillage"><option>Village A</option><option>Village B</option></select>
+<textarea id="taddress" placeholder="Full Address"></textarea>
+<select id="tclass"><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select>
+<input id="tspass" placeholder="Student Password">
+<button onclick="addStudent()">Add Student</button>
+
+<hr>
+
+<h4>Attendance (One Page)</h4>
+<table>
+<thead><tr><th>Name</th><th>P</th><th>A</th></tr></thead>
+<tbody id="attTable"></tbody>
+</table>
+<button onclick="saveAttendance()">Save Attendance</button>
+
+<hr>
+
+<h4>Student Questions (Voucher / Inbox)</h4>
+<div id="qInbox"></div>
+
+<hr>
+
+<h4>Teacher Private Notes (Locked)</h4>
+<div class="lock">
+<textarea id="tnotes"></textarea>
+<button onclick="saveTeacherNotes()">Save</button>
 </div>
 
-<div class="card" id="app" style="display:none">
-<h3 id="mode"></h3>
+<button onclick="logout()">Logout</button>
+</section>
 
-<textarea id="notes" placeholder="Teacher Notes (Teacher only)" style="display:none"></textarea>
-<button onclick="saveNotes()" id="saveBtn" style="display:none">Save Notes</button>
-
-<div id="chat"></div>
-
-<input id="q" placeholder="Ask your question">
-<button onclick="ask()">Ask</button>
-<button onclick="logout()" style="background:red">Logout</button>
-</div>
+<section id="notes" class="card">
+<h3>Notes/Videos (Class-wise)</h3>
+<select id="nclass"><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select>
+<input id="ntitle" placeholder="Title">
+<input id="nlink" placeholder="HTML/PDF/Video link">
+<button onclick="addNote()">Add</button>
+<hr>
+<div id="noteList"></div>
+</section>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyAuW-_QhchJ0wGQKJzYvqCQO8UL9CBJq4E",
-  authDomain: "student-best-ai-teacher.firebaseapp.com",
-  projectId: "student-best-ai-teacher"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
+let DB = JSON.parse(localStorage.getItem("GK_DB")||'{"students":{},"notes":{},"teacherNotes":"","questions":[]}');
+let CURRENT=null;
 
-let teacherOnline = false;
-let savedNotes = localStorage.getItem("notes") || "";
+function save(){localStorage.setItem("GK_DB",JSON.stringify(DB))}
+function show(id){document.querySelectorAll("section").forEach(s=>s.style.display="none");document.getElementById(id).style.display="block"}
+show("home");
 
-function signup(){
-auth.createUserWithEmailAndPassword(
-email.value,password.value
-).then(login).catch(e=>msg.innerText=e.message)
+function studentLogin(){
+ const s=DB.students[sid.value];
+ if(!s||s.pass!==spass.value){alert("Invalid");return;}
+ CURRENT=sid.value; renderStudent(); show("studentDash");
+}
+function renderStudent(){
+ const s=DB.students[CURRENT];
+ sinfo.innerText=`${s.name} | Class ${s.class}`;
+ let P=0,A=0; (s.att||[]).forEach(v=>v==="P"?P++:A++);
+ satt.innerText=`Present: ${P}, Absent: ${A}`;
+ snotes.innerHTML="";
+ (DB.notes[s.class]||[]).forEach(n=>snotes.innerHTML+=`<p><a target="_blank" href="${n.link}">${n.title}</a></p>`);
+ renderStudentAnswers();
+}
+function askAI(){
+ const question=q.value.trim(); if(!question){alert("Type question");return;}
+ DB.questions.push({
+  sid:CURRENT,name:DB.students[CURRENT].name,class:DB.students[CURRENT].class,
+  question,time:new Date().toLocaleString(),
+  aiReply:"(AI generatingÃ¢ÂÂ¦)",finalReply:"",answered:false
+ });
+ save(); ans.innerText="Question sent to teacher (AI processing)";
+ q.value="";
 }
 
-function login(){
-auth.signInWithEmailAndPassword(
-email.value,password.value
-).then(()=>{
-loginBox.style.display="none";
-app.style.display="block";
-if(role.value==="Teacher"){
-teacherOnline=true;
-mode.innerText="👩‍🏫 Teacher Online";
-notes.style.display="block";
-saveBtn.style.display="block";
-notes.value=savedNotes;
-}else{
-mode.innerText="🤖 Teacher Offline → AI Teaching";
+function teacherLogin(){ if(tpass.value!=="12345"){alert("Wrong");return;} renderTeacher(); show("teacherPanel"); }
+function addStudent(){
+ DB.students[tsid.value]={id:tsid.value,name:tsname.value,father:tfname.value,mother:tmname.value,village:tvillage.value,address:taddress.value,class:tclass.value,pass:tspass.value,att:[]};
+ save(); alert("Added");
 }
-}).catch(e=>msg.innerText=e.message)
+function renderTeacher(){
+ attTable.innerHTML="";
+ Object.values(DB.students).forEach(s=>{
+  attTable.innerHTML+=`<tr><td>${s.name}</td><td><input type="radio" name="${s.id}" value="P"></td><td><input type="radio" name="${s.id}" value="A"></td></tr>`;
+ });
+ tnotes.value=DB.teacherNotes||"";
+ renderQuestions();
 }
+function saveAttendance(){
+ Object.values(DB.students).forEach(s=>{
+  const r=document.querySelector(`input[name="${s.id}"]:checked`);
+  if(r) s.att.push(r.value);
+ });
+ save(); alert("Saved");
+}
+function renderQuestions(){
+ qInbox.innerHTML="";
+ DB.questions.forEach((q,i)=>{
+  qInbox.innerHTML+=`
+  <div class="lock">
+   <b>${q.name}</b> (Class ${q.class})<br><small>${q.time}</small>
+   <p><b>Q:</b> ${q.question}</p>
+   <p><b>AI Suggested:</b></p>
+   <textarea id="ai${i}">${q.aiReply||""}</textarea>
+   <p><b>Teacher Final:</b></p>
+   <textarea id="fr${i}">${q.finalReply||""}</textarea>
+   <button onclick="saveFinal(${i})">Save</button>
+   <a target="_blank" href="https://wa.me/91XXXXXXXXXX?text=${encodeURIComponent(q.question+'\\n'+(q.finalReply||q.aiReply))}">WhatsApp</a>
+  </div>`;
+ });
+}
+function saveFinal(i){
+ DB.questions[i].aiReply=document.getElementById("ai"+i).value;
+ DB.questions[i].finalReply=document.getElementById("fr"+i).value||DB.questions[i].aiReply;
+ DB.questions[i].answered=true; save(); alert("Saved");
+}
+function renderStudentAnswers(){
+ let out="";
+ DB.questions.filter(q=>q.sid===CURRENT).forEach(q=>{
+  out+=`<div class="card"><b>Q:</b>${q.question}<br><b>A:</b>${q.finalReply||q.aiReply||"Waiting"}</div>`;
+ });
+ ans.innerHTML=out;
+}
+function saveTeacherNotes(){DB.teacherNotes=tnotes.value; save(); alert("Saved")}
+function addNote(){ DB.notes[nclass.value]=DB.notes[nclass.value]||[]; DB.notes[nclass.value].push({title:ntitle.value,link:nlink.value}); save(); renderNotes(); }
+function renderNotes(){
+ noteList.innerHTML="";
+ Object.keys(DB.notes).forEach(c=>{
+  noteList.innerHTML+=`<h4>Class ${c}</h4>`;
+  DB.notes[c].forEach(n=>noteList.innerHTML+=`<p><a target="_blank" href="${n.link}">${n.title}</a></p>`);
+ });
+}
+renderNotes();
+function logout(){CURRENT=null;show("home")}
+</script>
+</body>
+</html> <script>
+async function askAI(){
+  const question = q.value.trim();
+  if(!question){ alert("Type question"); return; }
 
-function saveNotes(){
-savedNotes=notes.value;
-localStorage.setItem("notes",savedNotes);
-alert("Notes saved");
-}
+  ans.innerText = "AI is thinking...";
 
-function ask(){
-const qn=q.value;
-chat.innerHTML+=`<div class="you">You: ${qn}</div>`;
-let ans;
+  try{
+    const res = await fetch(
+      "https://us-central1-YOUR_PROJECT_ID.cloudfunctions.net/askAI",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data:{ question } })
+      }
+    );
 
-if(teacherOnline){
-ans="Teacher will reply live.";
-}else{
-if(savedNotes && savedNotes.toLowerCase().includes(qn.split(" ")[0].toLowerCase())){
-ans="Notes ke hisaab se jawab: "+savedNotes;
-}else{
-ans="Iska answer notes me nahi mila.";
-}
-speak(ans);
-}
-chat.innerHTML+=`<div class="ai">AI: ${ans}</div>`;
-q.value="";
-}
+    const json = await res.json();
+    const aiAnswer = json.result.answer;
 
-function speak(text){
-const u=new SpeechSynthesisUtterance(text);
-speechSynthesis.speak(u);
-}
+    // update last question
+    DB.questions[DB.questions.length-1].aiReply = aiAnswer;
+    save();
 
-function logout(){
-auth.signOut();
-location.reload();
+    renderStudentAnswers();
+  }catch(e){
+    ans.innerText = "AI server error";
+    console.error(e);
+  }
+}
+</script> <script>
+async function askAI(){
+  const question = q.value.trim();
+  if(!question){ alert("Type question"); return; }
+
+  ans.innerText = "AI is thinking...";
+
+  try{
+    const res = await fetch(
+      "https://us-central1-YOUR_PROJECT_ID.cloudfunctions.net/askAI",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question })
+      }
+    );
+
+    const json = await res.json();
+
+    DB.questions[DB.questions.length-1].aiReply = json.answer;
+    save();
+    renderStudentAnswers();
+
+  }catch(e){
+    ans.innerText = "AI error";
+    console.error(e);
+  }
+}
+</script> <script>
+async function askAI(){
+  const question = q.value.trim();
+  if(!question){ alert("Question likhiye"); return; }
+
+  ans.innerText = "AI soch raha hai...";
+
+  try{
+    const res = await fetch(
+      "https://us-central1-YOUR_PROJECT_ID.cloudfunctions.net/askAI",
+      {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({
+          question: question,
+          cls: DB.students[CURRENT].class,
+          mode: aiMode.value,
+          lang: aiLang.value
+        })
+      }
+    );
+
+    const json = await res.json();
+
+    DB.questions[DB.questions.length-1].aiReply = json.answer;
+    save();
+    renderStudentAnswers();
+
+  }catch(e){
+    ans.innerText = "AI error aaya";
+    console.error(e);
+  }
 }
 </script>
-
-</body>
-</html>

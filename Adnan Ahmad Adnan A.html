@@ -1,307 +1,961 @@
-<!DOCTYPE html>
-<html lang="hi">
+
+    <!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>GK Study Centre  Complete System</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>School / Coaching ERP – Phase 1</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Firebase (GitHub Pages compatible) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <style>
 body{font-family:Arial;background:#f2f4f7;margin:0}
 header{background:#0a3d62;color:#fff;text-align:center;padding:15px}
-marquee{background:#1e3799;color:#fff;padding:6px;font-weight:bold}
 nav{background:#34495e;text-align:center;padding:8px}
 nav button{margin:4px;padding:8px 12px;border:0;border-radius:4px;background:#2c3e50;color:#fff}
 section{display:none;padding:15px}
 .card{background:#fff;padding:15px;border-radius:8px;margin-bottom:15px}
-input,select,textarea,button{width:100%;padding:8px;margin:6px 0}
+input,select,button{width:100%;padding:8px;margin:6px 0}
 button{background:#1e3799;color:#fff;border:0;border-radius:4px}
-table{width:100%;border-collapse:collapse}
-th,td{border:1px solid #ccc;padding:6px;text-align:center}
 .small{font-size:12px;color:#555}
-.lock{background:#eee;padding:8px;border-radius:6px}
-.top a{display:inline-block;margin:5px;padding:8px 10px;background:#25D366;color:#fff;text-decoration:none;border-radius:4px}
 </style>
 </head>
+
 <body>
+
 <header>
-<h2>GK Coaching Centre</h2>
-<p>Attendance & Notes & Fees & AI (Teacher-Controlled)</p>
+<h2>Institute Management System</h2>
+<p>Phase-1 • Login • Roles • Firebase</p>
 </header>
-<marquee>GK Study Centre & Class 6 to 12 & Online + Offline</marquee>
 
 <nav>
-<button onclick="show('home')">Home</button>
-<button onclick="show('studentLogin')">Student Login</button>
-<button onclick="show('teacherLogin')">Teacher/Admin</button>
-<button onclick="show('notes')">Notes/Videos</button>
+<button onclick="show('login')">Login</button>
+<button onclick="show('signup')">Signup</button>
+<button onclick="logout()">Logout</button>
 </nav>
 
-<section id="home" class="card">
-<div class="top">
-<a href="https://wa.me/918840002145">WhatsApp</a>
-<a href="#">Pay Fees</a>
-<a href="#">Download App</a>
-</div>
-<p>Welcome to GK Study Centre digital system.</p>
+<!-- LOGIN -->
+<section id="login" class="card">
+<h3>Login</h3>
+<select id="loginRole">
+<option value="admin">Admin</option>
+<option value="teacher">Teacher</option>
+<option value="student">Student</option>
+</select>
+<input id="loginId" placeholder="User ID">
+<input id="loginPass" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<p id="loginMsg" class="small"></p>
 </section>
 
-<section id="studentLogin" class="card">
-<h3>Student Login</h3>
-<input id="sid" placeholder="Student ID">
-<input id="spass" type="password" placeholder="Password">
-<button onclick="studentLogin()">Login</button>
+<!-- SIGNUP -->
+<section id="signup" class="card">
+<h3>Signup</h3>
+<select id="signupRole">
+<option value="teacher">Teacher</option>
+<option value="student">Student</option>
+</select>
+<input id="signupId" placeholder="Choose User ID">
+<input id="signupName" placeholder="Full Name">
+<input id="signupPass" type="password" placeholder="Password">
+<button onclick="signup()">Create Account</button>
+<p class="small">Admin account manually banega (Firebase me)</p>
 </section>
 
-<section id="studentDash" class="card">
-<h3>Student Dashboard</h3>
-<p id="sinfo"></p>
-<p id="satt"></p>
-
-<h4>Class Notes/Videos</h4>
-<div id="snotes"></div>
-
-<h4>Ask Question (AI + Teacher)</h4>
-<textarea id="q" placeholder="Type your question"></textarea>
-<button onclick="askAI()">Send</button>
-<div id="ans" class="small"></div>
-
-<button onclick="logout()">Logout</button>
+<!-- PASSWORD CHANGE -->
+<section id="changePass" class="card">
+<h3>Change Password</h3>
+<input id="newPass" type="password" placeholder="New Password">
+<button onclick="changePassword()">Update Password</button>
 </section>
 
-<section id="teacherLogin" class="card">
-<h3>Teacher/Admin Login</h3>
-<input id="tpass" type="password" placeholder="Password">
-<button onclick="teacherLogin()">Login</button>
-<p class="small">Default: Gk1234 (change in code)</p>
+<!-- ADMIN DASHBOARD -->
+<section id="adminPanel" class="card">
+<h3>Admin Dashboard</h3>
+<p>Welcome, Admin</p>
+<p class="small">Phase-2 me: teachers, classes, register</p>
+<button onclick="show('changePass')">Change Password</button>
 </section>
 
+<!-- TEACHER DASHBOARD -->
 <section id="teacherPanel" class="card">
-<h3>Teacher/Admin Panel</h3>
+<h3>Teacher Dashboard</h3>
+<p id="teacherInfo"></p>
+<p class="small">Phase-2 me: profile, students, attendance, notes</p>
+<button onclick="show('changePass')">Change Password</button>
+</section>
+
+<!-- STUDENT DASHBOARD -->
+<section id="studentPanel" class="card">
+<h3>Student Dashboard</h3>
+<p id="studentInfo"></p>
+<p class="small">Phase-2 me: attendance, notes, AI doubt chat</p>
+<button onclick="show('changePass')">Change Password</button>
+</section>
+
+<script>
+/* 🔥 FIREBASE CONFIG – YAHAN APNA CONFIG PASTE KARO */
+firebase.initializeApp({
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "XXXX",
+  appId: "XXXX"
+});
+const db = firebase.database();
+
+/* GLOBAL STATE */
+let currentUser = null;
+let currentRole = null;
+
+/* NAVIGATION */
+function show(id){
+ document.querySelectorAll("section").forEach(s=>s.style.display="none");
+ document.getElementById(id).style.display="block";
+}
+show("login");
+
+/* SIGNUP */
+function signup(){
+ let role = signupRole.value;
+ let id = signupId.value;
+ let name = signupName.value;
+ let pass = signupPass.value;
+
+ if(!id || !pass){
+  alert("Fill all fields");
+  return;
+ }
+
+ db.ref("users/"+id).set({
+  role: role,
+  name: name,
+  password: pass
+ });
+
+ alert("Account Created. Now Login.");
+ show("login");
+}
+
+/* LOGIN */
+function login(){
+ let role = loginRole.value;
+ let id = loginId.value;
+ let pass = loginPass.value;
+
+ db.ref("users/"+id).once("value",snap=>{
+  if(!snap.exists()){
+   loginMsg.innerText="User not found";
+   return;
+  }
+  let u = snap.val();
+  if(u.password !== pass || u.role !== role){
+   loginMsg.innerText="Invalid credentials";
+   return;
+  }
+
+  currentUser = id;
+  currentRole = role;
+
+  if(role==="admin"){
+   show("adminPanel");
+  }
+  if(role==="teacher"){
+   teacherInfo.innerHTML = `<b>Name:</b> ${u.name}<br><b>ID:</b> ${id}`;
+   show("teacherPanel");
+  }
+  if(role==="student"){
+   studentInfo.innerHTML = `<b>Name:</b> ${u.name}<br><b>ID:</b> ${id}`;
+   show("studentPanel");
+  }
+ });
+}
+
+/* PASSWORD CHANGE */
+function changePassword(){
+ if(!currentUser){
+  alert("Login first");
+  return;
+ }
+ db.ref("users/"+currentUser+"/password").set(newPass.value);
+ alert("Password Updated");
+ show(currentRole+"Panel");
+}
+
+/* LOGOUT */
+function logout(){
+ currentUser=null;
+ currentRole=null;
+ show("login");
+}
+</script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Institute ERP – Phase 2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<style>
+body{font-family:Arial;background:#f2f4f7;margin:0}
+header{background:#0a3d62;color:#fff;text-align:center;padding:12px}
+nav{text-align:center;background:#34495e;padding:8px}
+nav button{margin:3px;padding:8px;border:0;border-radius:4px;background:#2c3e50;color:#fff}
+section{display:none;padding:15px}
+.card{background:#fff;padding:15px;border-radius:8px;margin-bottom:12px}
+input,select,textarea,button{width:100%;padding:7px;margin:5px 0}
+button{background:#1e3799;color:#fff;border:0;border-radius:4px}
+.small{font-size:12px;color:#555}
+hr{margin:12px 0}
+</style>
+</head>
+
+<body>
+
+<header>
+<h3>Institute Management System</h3>
+<p>Phase-2 • Teacher • Students • Attendance • Notes</p>
+</header>
+
+<nav>
+<button onclick="show('login')">Login</button>
+<button onclick="logout()">Logout</button>
+</nav>
+
+<!-- LOGIN -->
+<section id="login" class="card">
+<h3>Login</h3>
+<select id="role">
+<option value="teacher">Teacher</option>
+<option value="student">Student</option>
+</select>
+<input id="uid" placeholder="User ID">
+<input id="upass" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<p id="msg" class="small"></p>
+</section>
+
+<!-- TEACHER PANEL -->
+<section id="teacherPanel" class="card">
+<h3>Teacher Panel</h3>
+
+<h4>Teacher Profile</h4>
+<input id="tSubject" placeholder="Subject">
+<input id="tWhatsapp" placeholder="WhatsApp Number">
+<button onclick="saveTeacherProfile()">Save Profile</button>
+
+<hr>
+
+<h4>Create Class / Section</h4>
+<input id="cls" placeholder="Class (eg 10)">
+<input id="sec" placeholder="Section (eg A)">
+<button onclick="createClass()">Create</button>
+
+<hr>
 
 <h4>Add Student</h4>
-<input id="tsid" placeholder="Student ID">
-<input id="tsname" placeholder="Student Name">
-<input id="tfname" placeholder="Father Name">
-<input id="tmname" placeholder="Mother Name">
-<select id="Section"><option>Section A</option><option>Section B</option></select>
-<textarea id="taddress" placeholder="Full Address"></textarea>
-<select id="tclass"><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select>
-<input id="tspass" placeholder="Student Password">
+<input id="sid" placeholder="Student ID">
+<input id="sname" placeholder="Student Name">
 <button onclick="addStudent()">Add Student</button>
 
 <hr>
 
-<h4>Attendance (One Page)</h4>
-<table>
-<thead><tr><th>Name</th><th>P</th><th>A</th></tr></thead>
-<tbody id="attTable"></tbody>
-</table>
-<button onclick="saveAttendance()">Save Attendance</button>
+<h4>Mark Attendance</h4>
+<select id="attStudent"></select>
+<select id="attStatus">
+<option>Present</option>
+<option>Absent</option>
+</select>
+<button onclick="markAttendance()">Save Attendance</button>
 
 <hr>
 
-<h4>Student Questions (Voucher / Inbox)</h4>
-<div id="qInbox"></div>
+<h4>Add Notes</h4>
+<input id="noteTitle" placeholder="Title">
+<input id="noteLink" placeholder="PDF / Drive Link">
+<button onclick="addNote()">Add Note</button>
 
 <hr>
 
-<h4>Teacher Private Notes (Locked)</h4>
-<div class="lock">
-<textarea id="tnotes"></textarea>
-<button onclick="saveTeacherNotes()">Save</button>
-</div>
-
-<button onclick="logout()">Logout</button>
+<h4>Add YouTube Video</h4>
+<input id="vidTitle" placeholder="Video Title">
+<input id="vidLink" placeholder="YouTube Link">
+<button onclick="addVideo()">Add Video</button>
 </section>
 
-<section id="notes" class="card">
-<h3>Notes/Videos (Class-wise)</h3>
-<select id="nclass"><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select>
-<input id="ntitle" placeholder="Title">
-<input id="nlink" placeholder="HTML/PDF/Video link">
-<button onclick="addNote()">Add</button>
-<hr>
-<div id="noteList"></div>
+<!-- STUDENT PANEL -->
+<section id="studentPanel" class="card">
+<h3>Student Panel</h3>
+<p id="sinfo"></p>
+
+<h4>Notes</h4>
+<div id="notesBox"></div>
+
+<h4>Videos</h4>
+<div id="videosBox"></div>
+
+<h4>Attendance</h4>
+<div id="attendanceBox"></div>
 </section>
 
 <script>
-let DB = JSON.parse(localStorage.getItem("GK_DB")||'{"students":{},"notes":{},"teacherNotes":"","questions":[]}');
-let CURRENT=null;
+/* 🔥 FIREBASE CONFIG */
+firebase.initializeApp({
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT"
+});
+const db = firebase.database();
 
-function save(){localStorage.setItem("GK_DB",JSON.stringify(DB))}
-function show(id){document.querySelectorAll("section").forEach(s=>s.style.display="none");document.getElementById(id).style.display="block"}
-show("home");
+let currentUser="", currentRole="";
+let currentClass="", currentSection="";
 
-function studentLogin(){
- const s=DB.students[sid.value];
- if(!s||s.pass!==spass.value){alert("Invalid");return;}
- CURRENT=sid.value; renderStudent(); show("studentDash");
+/* NAV */
+function show(id){
+ document.querySelectorAll("section").forEach(s=>s.style.display="none");
+ document.getElementById(id).style.display="block";
 }
-function renderStudent(){
- const s=DB.students[CURRENT];
- sinfo.innerText=`${s.name} | Class ${s.class}`;
- let P=0,A=0; (s.att||[]).forEach(v=>v==="P"?P++:A++);
- satt.innerText=`Present: ${P}, Absent: ${A}`;
- snotes.innerHTML="";
- (DB.notes[s.class]||[]).forEach(n=>snotes.innerHTML+=`<p><a target="_blank" href="${n.link}">${n.title}</a></p>`);
- renderStudentAnswers();
-}
-function askAI(){
- const question=q.value.trim(); if(!question){alert("Type question");return;}
- DB.questions.push({
-  sid:CURRENT,name:DB.students[CURRENT].name,class:DB.students[CURRENT].class,
-  question,time:new Date().toLocaleString(),
-  aiReply:"(AI generatingâ¦)",finalReply:"",answered:false
+show("login");
+
+/* LOGIN */
+function login(){
+ let r=role.value,id=uid.value,p=upass.value;
+ db.ref("users/"+id).once("value",s=>{
+  if(!s.exists()||s.val().password!==p||s.val().role!==r){
+   msg.innerText="Invalid login";
+   return;
+  }
+  currentUser=id; currentRole=r;
+  if(r==="teacher") show("teacherPanel");
+  if(r==="student"){
+   show("studentPanel");
+   loadStudentData(id);
+  }
  });
- save(); ans.innerText="Question sent to teacher (AI processing)";
- q.value="";
 }
 
-function teacherLogin(){ if(tpass.value!=="12345"){alert("Wrong");return;} renderTeacher(); show("teacherPanel"); }
+/* TEACHER FUNCTIONS */
+function saveTeacherProfile(){
+ db.ref("teachers/"+currentUser+"/profile").set({
+  subject:tSubject.value,
+  whatsapp:tWhatsapp.value
+ });
+ alert("Profile saved");
+}
+
+function createClass(){
+ currentClass=cls.value;
+ currentSection=sec.value;
+ alert("Class set: "+currentClass+"-"+currentSection);
+ loadStudents();
+}
+
 function addStudent(){
- DB.students[tsid.value]={id:tsid.value,name:tsname.value,father:tfname.value,mother:tmname.value,village:tvillage.value,address:taddress.value,class:tclass.value,pass:tspass.value,att:[]};
- save(); alert("Added");
+ let sidv=sid.value;
+ db.ref(`teachers/${currentUser}/classes/${currentClass}_${currentSection}/students/${sidv}`)
+ .set({name:sname.value});
+ loadStudents();
 }
-function renderTeacher(){
- attTable.innerHTML="";
- Object.values(DB.students).forEach(s=>{
-  attTable.innerHTML+=`<tr><td>${s.name}</td><td><input type="radio" name="${s.id}" value="P"></td><td><input type="radio" name="${s.id}" value="A"></td></tr>`;
- });
- tnotes.value=DB.teacherNotes||"";
- renderQuestions();
-}
-function saveAttendance(){
- Object.values(DB.students).forEach(s=>{
-  const r=document.querySelector(`input[name="${s.id}"]:checked`);
-  if(r) s.att.push(r.value);
- });
- save(); alert("Saved");
-}
-function renderQuestions(){
- qInbox.innerHTML="";
- DB.questions.forEach((q,i)=>{
-  qInbox.innerHTML+=`
-  <div class="lock">
-   <b>${q.name}</b> (Class ${q.class})<br><small>${q.time}</small>
-   <p><b>Q:</b> ${q.question}</p>
-   <p><b>AI Suggested:</b></p>
-   <textarea id="ai${i}">${q.aiReply||""}</textarea>
-   <p><b>Teacher Final:</b></p>
-   <textarea id="fr${i}">${q.finalReply||""}</textarea>
-   <button onclick="saveFinal(${i})">Save</button>
-   <a target="_blank" href="https://wa.me/91XXXXXXXXXX?text=${encodeURIComponent(q.question+'\\n'+(q.finalReply||q.aiReply))}">WhatsApp</a>
-  </div>`;
+
+function loadStudents(){
+ attStudent.innerHTML="";
+ db.ref(`teachers/${currentUser}/classes/${currentClass}_${currentSection}/students`)
+ .once("value",s=>{
+  s.forEach(st=>{
+   attStudent.innerHTML+=`<option value="${st.key}">${st.val().name}</option>`;
+  });
  });
 }
-function saveFinal(i){
- DB.questions[i].aiReply=document.getElementById("ai"+i).value;
- DB.questions[i].finalReply=document.getElementById("fr"+i).value||DB.questions[i].aiReply;
- DB.questions[i].answered=true; save(); alert("Saved");
+
+function markAttendance(){
+ let d=new Date().toISOString().slice(0,10);
+ db.ref(`teachers/${currentUser}/classes/${currentClass}_${currentSection}/attendance/${attStudent.value}/${d}`)
+ .set(attStatus.value);
+ alert("Attendance saved");
 }
-function renderStudentAnswers(){
- let out="";
- DB.questions.filter(q=>q.sid===CURRENT).forEach(q=>{
-  out+=`<div class="card"><b>Q:</b>${q.question}<br><b>A:</b>${q.finalReply||q.aiReply||"Waiting"}</div>`;
+
+function addNote(){
+ db.ref(`teachers/${currentUser}/classes/${currentClass}_${currentSection}/notes`)
+ .push({title:noteTitle.value,link:noteLink.value});
+ alert("Note added");
+}
+
+function addVideo(){
+ db.ref(`teachers/${currentUser}/classes/${currentClass}_${currentSection}/videos`)
+ .push({title:vidTitle.value,link:vidLink.value});
+ alert("Video added");
+}
+
+/* STUDENT VIEW */
+function loadStudentData(sid){
+ db.ref("teachers").once("value",t=>{
+  t.forEach(tr=>{
+   tr.child("classes").forEach(c=>{
+    c.child("students").child(sid).exists() &&
+    loadClassData(tr.key,c.key,sid);
+   });
+  });
  });
- ans.innerHTML=out;
 }
-function saveTeacherNotes(){DB.teacherNotes=tnotes.value; save(); alert("Saved")}
-function addNote(){ DB.notes[nclass.value]=DB.notes[nclass.value]||[]; DB.notes[nclass.value].push({title:ntitle.value,link:nlink.value}); save(); renderNotes(); }
-function renderNotes(){
- noteList.innerHTML="";
- Object.keys(DB.notes).forEach(c=>{
-  noteList.innerHTML+=`<h4>Class ${c}</h4>`;
-  DB.notes[c].forEach(n=>noteList.innerHTML+=`<p><a target="_blank" href="${n.link}">${n.title}</a></p>`);
+
+function loadClassData(tid,clsSec,sid){
+ notesBox.innerHTML=""; videosBox.innerHTML=""; attendanceBox.innerHTML="";
+ db.ref(`teachers/${tid}/classes/${clsSec}/notes`).once("value",n=>{
+  n.forEach(x=>{
+   notesBox.innerHTML+=`<a href="${x.val().link}" target="_blank">${x.val().title}</a><br>`;
+  });
+ });
+ db.ref(`teachers/${tid}/classes/${clsSec}/videos`).once("value",v=>{
+  v.forEach(x=>{
+   videosBox.innerHTML+=`<a href="${x.val().link}" target="_blank">${x.val().title}</a><br>`;
+  });
+ });
+ db.ref(`teachers/${tid}/classes/${clsSec}/attendance/${sid}`).once("value",a=>{
+  a.forEach(d=>{
+   attendanceBox.innerHTML+=`${d.key}: ${d.val()}<br>`;
+  });
  });
 }
-renderNotes();
-function logout(){CURRENT=null;show("home")}
+
+function logout(){
+ currentUser=""; currentRole="";
+ show("login");
+}
 </script>
+
 </body>
-</html> <script>
-async function askAI(){
-  const question = q.value.trim();
-  if(!question){ alert("Type question"); return; }
+</html>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Institute ERP – Phase 3</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  ans.innerText = "AI is thinking...";
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  try{
-    const res = await fetch(
-      "https://us-central1-YOUR_PROJECT_ID.cloudfunctions.net/askAI",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data:{ question } })
-      }
-    );
+<style>
+body{font-family:Arial;background:#f2f4f7;margin:0}
+header{background:#0a3d62;color:#fff;text-align:center;padding:12px}
+nav{text-align:center;background:#34495e;padding:8px}
+nav button{margin:3px;padding:8px;border:0;border-radius:4px;background:#2c3e50;color:#fff}
+section{display:none;padding:15px}
+.card{background:#fff;padding:15px;border-radius:8px;margin-bottom:12px}
+input,select,textarea,button{width:100%;padding:7px;margin:5px 0}
+button{background:#1e3799;color:#fff;border:0;border-radius:4px}
+.small{font-size:12px;color:#555}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid #ccc;padding:6px;text-align:center}
+hr{margin:12px 0}
+</style>
+</head>
 
-    const json = await res.json();
-    const aiAnswer = json.result.answer;
+<body>
 
-    // update last question
-    DB.questions[DB.questions.length-1].aiReply = aiAnswer;
-    save();
+<header>
+<h3>Institute Management System</h3>
+<p>Phase-3 • Register • Attendance % • AI Doubt</p>
+</header>
 
-    renderStudentAnswers();
-  }catch(e){
-    ans.innerText = "AI server error";
-    console.error(e);
-  }
+<nav>
+<button onclick="show('login')">Login</button>
+<button onclick="logout()">Logout</button>
+</nav>
+
+<!-- LOGIN -->
+<section id="login" class="card">
+<h3>Login</h3>
+<select id="role">
+<option value="teacher">Teacher</option>
+<option value="student">Student</option>
+</select>
+<input id="uid" placeholder="User ID">
+<input id="upass" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<p id="msg" class="small"></p>
+</section>
+
+<!-- TEACHER PANEL -->
+<section id="teacherPanel" class="card">
+<h3>Teacher Dashboard</h3>
+<div id="teacherSummary"></div>
+
+<hr>
+
+<h4>Class Register</h4>
+<select id="regClass"></select>
+<button onclick="loadRegister()">View Register</button>
+<div id="registerBox"></div>
+</section>
+
+<!-- STUDENT PANEL -->
+<section id="studentPanel" class="card">
+<h3>Student Dashboard</h3>
+<p id="sinfo"></p>
+
+<h4>Attendance Summary</h4>
+<p id="attPercent"></p>
+
+<hr>
+
+<h4>AI Doubt Solver 🤖</h4>
+<textarea id="doubt" placeholder="Apna doubt likhiye..."></textarea>
+<button onclick="solveDoubt()">Ask AI</button>
+<div id="aiAnswer" class="small"></div>
+</section>
+
+<script>
+/* 🔥 FIREBASE CONFIG */
+firebase.initializeApp({
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT"
+});
+const db = firebase.database();
+
+let currentUser="", currentRole="";
+
+/* NAV */
+function show(id){
+ document.querySelectorAll("section").forEach(s=>s.style.display="none");
+ document.getElementById(id).style.display="block";
 }
-</script> <script>
-async function askAI(){
-  const question = q.value.trim();
-  if(!question){ alert("Type question"); return; }
+show("login");
 
-  ans.innerText = "AI is thinking...";
-
-  try{
-    const res = await fetch(
-      "https://us-central1-YOUR_PROJECT_ID.cloudfunctions.net/askAI",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question })
-      }
-    );
-
-    const json = await res.json();
-
-    DB.questions[DB.questions.length-1].aiReply = json.answer;
-    save();
-    renderStudentAnswers();
-
-  }catch(e){
-    ans.innerText = "AI error";
-    console.error(e);
+/* LOGIN */
+function login(){
+ let r=role.value,id=uid.value,p=upass.value;
+ db.ref("users/"+id).once("value",s=>{
+  if(!s.exists()||s.val().password!==p||s.val().role!==r){
+   msg.innerText="Invalid login";
+   return;
   }
+  currentUser=id; currentRole=r;
+  if(r==="teacher"){
+   show("teacherPanel");
+   loadTeacherDashboard();
+  }
+  if(r==="student"){
+   show("studentPanel");
+   sinfo.innerHTML=`<b>ID:</b> ${id}`;
+   loadStudentAttendance(id);
+  }
+ });
 }
-</script> <script>
-async function askAI(){
-  const question = q.value.trim();
-  if(!question){ alert("Question likhiye"); return; }
 
-  ans.innerText = "AI soch raha hai...";
+/* ---------------- TEACHER ---------------- */
 
-  try{
-    const res = await fetch(
-      "https://us-central1-YOUR_PROJECT_ID.cloudfunctions.net/askAI",
-      {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body:JSON.stringify({
-          question: question,
-          cls: DB.students[CURRENT].class,
-          mode: aiMode.value,
-          lang: aiLang.value
-        })
-      }
-    );
+function loadTeacherDashboard(){
+ regClass.innerHTML="";
+ teacherSummary.innerHTML="";
 
-    const json = await res.json();
+ db.ref("teachers/"+currentUser+"/classes").once("value",c=>{
+  let classCount=0, studentCount=0;
+  c.forEach(cls=>{
+   classCount++;
+   regClass.innerHTML+=`<option value="${cls.key}">${cls.key}</option>`;
+   cls.child("students").forEach(()=>studentCount++);
+  });
+  teacherSummary.innerHTML=
+   `<b>Total Classes:</b> ${classCount}<br>
+    <b>Total Students:</b> ${studentCount}`;
+ });
+}
 
-    DB.questions[DB.questions.length-1].aiReply = json.answer;
-    save();
-    renderStudentAnswers();
+function loadRegister(){
+ let cls=regClass.value;
+ let box="<table><tr><th>Student</th><th>Attendance %</th></tr>";
+
+ db.ref(`teachers/${currentUser}/classes/${cls}`).once("value",c=>{
+  let students=c.child("students");
+  let attendance=c.child("attendance");
+
+  students.forEach(st=>{
+   let sid=st.key;
+   let total=0,present=0;
+   attendance.child(sid).forEach(d=>{
+    total++;
+    if(d.val()==="Present") present++;
+   });
+   let percent=total?Math.round((present/total)*100):0;
+   box+=`<tr><td>${st.val().name}</td><td>${percent}%</td></tr>`;
+  });
+
+  box+="</table>";
+  registerBox.innerHTML=box;
+ });
+}
+
+/* ---------------- STUDENT ---------------- */
+
+function loadStudentAttendance(sid){
+ db.ref("teachers").once("value",t=>{
+  t.forEach(tr=>{
+   tr.child("classes").forEach(c=>{
+    if(c.child("students").child(sid).exists()){
+     let total=0,present=0;
+     c.child("attendance").child(sid).forEach(d=>{
+      total++;
+      if(d.val()==="Present") present++;
+     });
+     let percent=total?Math.round((present/total)*100):0;
+     attPercent.innerHTML=`Attendance: ${percent}%`;
+    }
+   });
+  });
+ });
+}
+
+/* ---------------- AI DOUBT (BASIC) ---------------- */
+
+function solveDoubt(){
+ let q=doubt.value.toLowerCase();
+ let ans="";
+
+ if(q.includes("math")){
+  ans="Tip: Math doubt ke liye formula likh kar practice karein.";
+ }else if(q.includes("science")){
+  ans="Science me diagram aur concept samajhna zaroori hota hai.";
+ }else if(q.includes("english")){
+  ans="English improve karne ke liye daily reading karein.";
+ }else{
+  ans="Is doubt ke liye apne teacher se poochhein ya Google/YouTube refer karein.";
+ }
+
+ aiAnswer.innerHTML=
+  ans + `<br><br>
+  🔍 Helpful links:<br>
+  <a href="https://www.google.com/search?q=${encodeURIComponent(doubt.value)}" target="_blank">Google Search</a><br>
+  <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(doubt.value)}" target="_blank">YouTube Videos</a>`;
+}
+
+/* LOGOUT */
+function logout(){
+ currentUser=""; currentRole="";
+ show("login");
+}
+</script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Institute ERP – Phase 4 (Complete)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<style>
+body{font-family:Arial;background:#f2f4f7;margin:0}
+header{background:#0a3d62;color:#fff;text-align:center;padding:12px}
+nav{text-align:center;background:#34495e;padding:8px}
+nav button{margin:3px;padding:8px;border:0;border-radius:4px;background:#2c3e50;color:#fff}
+section{display:none;padding:15px}
+.card{background:#fff;padding:15px;border-radius:8px;margin-bottom:12px}
+input,select,textarea,button{width:100%;padding:7px;margin:5px 0}
+button{background:#1e3799;color:#fff;border:0;border-radius:4px}
+.small{font-size:12px;color:#555}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid #ccc;padding:6px;text-align:center}
+hr{margin:12px 0}
+video{width:100%;max-width:300px;border:1px solid #ccc}
+</style>
+</head>
+
+<body>
+
+<header>
+<h3>Institute Management System</h3>
+<p>Phase-4 • Multi-Branch • AI • Face Attendance</p>
+</header>
+
+<nav>
+<button onclick="show('login')">Login</button>
+<button onclick="logout()">Logout</button>
+</nav>
+
+<!-- LOGIN -->
+<section id="login" class="card">
+<h3>Login</h3>
+
+<select id="branch">
+<option value="main">Main Branch</option>
+<option value="branch1">Branch 1</option>
+</select>
+
+<select id="role">
+<option value="teacher">Teacher</option>
+<option value="student">Student</option>
+</select>
+
+<input id="uid" placeholder="User ID">
+<input id="upass" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<p id="msg" class="small"></p>
+</section>
+
+<!-- TEACHER PANEL -->
+<section id="teacherPanel" class="card">
+<h3>Teacher Dashboard</h3>
+<div id="teacherSummary"></div>
+
+<hr>
+
+<h4>Teacher Profile</h4>
+<input id="tName" placeholder="Name">
+<input id="tSubject" placeholder="Subject">
+<input id="tWhatsapp" placeholder="WhatsApp Number">
+<button onclick="saveTeacherProfile()">Save Profile</button>
+
+<hr>
+
+<h4>My Classes</h4>
+<select id="regClass"></select>
+<button onclick="loadRegister()">View Class Register</button>
+<div id="registerBox"></div>
+
+<hr>
+
+<h4>Face Attendance (Demo)</h4>
+<video id="cam" autoplay></video>
+<button onclick="startCam()">Open Camera</button>
+<button onclick="markFaceAttendance()">Mark Attendance</button>
+</section>
+
+<!-- STUDENT PANEL -->
+<section id="studentPanel" class="card">
+<h3>Student Dashboard</h3>
+<p id="sinfo"></p>
+
+<h4>Attendance %</h4>
+<p id="attPercent"></p>
+
+<hr>
+
+<h4>Teacher Profile</h4>
+<div id="teacherProfile"></div>
+
+<hr>
+
+<h4>AI Doubt Solver 🤖</h4>
+<textarea id="aiQ" placeholder="Apna doubt likhiye..."></textarea>
+<button onclick="askAI()">Ask AI</button>
+<div id="aiA" class="small"></div>
+</section>
+
+<script>
+/* 🔥 FIREBASE CONFIG (PASTE YOUR OWN) */
+firebase.initializeApp({
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT"
+});
+const db = firebase.database();
+
+/* GLOBAL STATE */
+let currentUser="", currentRole="", currentBranch="";
+
+/* NAV */
+function show(id){
+ document.querySelectorAll("section").forEach(s=>s.style.display="none");
+ document.getElementById(id).style.display="block";
+}
+show("login");
+
+/* LOGIN */
+function login(){
+ currentBranch = branch.value;
+ let r=role.value,id=uid.value,p=upass.value;
+
+ db.ref("users/"+id).once("value",s=>{
+  if(!s.exists() || s.val().password!==p || s.val().role!==r){
+   msg.innerText="Invalid login";
+   return;
+  }
+
+  currentUser=id;
+  currentRole=r;
+
+  if(r==="teacher"){
+   show("teacherPanel");
+   loadTeacherDashboard();
+  }
+
+  if(r==="student"){
+   show("studentPanel");
+   sinfo.innerHTML=`<b>ID:</b> ${id}`;
+   loadStudentAttendance(id);
+   loadTeacherPublicProfile();
+  }
+ });
+}
+
+/* -------- TEACHER -------- */
+
+function saveTeacherProfile(){
+ db.ref(`branches/${currentBranch}/teachers/${currentUser}/profile`)
+ .set({
+  name:tName.value,
+  subject:tSubject.value,
+  whatsapp:tWhatsapp.value
+ });
+ alert("Profile saved");
+}
+
+function loadTeacherDashboard(){
+ regClass.innerHTML="";
+ teacherSummary.innerHTML="";
+
+ db.ref(`branches/${currentBranch}/teachers/${currentUser}/classes`)
+ .once("value",c=>{
+  let clsCount=0;
+  c.forEach(x=>{
+   clsCount++;
+   regClass.innerHTML+=`<option value="${x.key}">${x.key}</option>`;
+  });
+  teacherSummary.innerHTML=`<b>Total Classes:</b> ${clsCount}`;
+ });
+}
+
+function loadRegister(){
+ let cls=regClass.value;
+ let html="<table><tr><th>Student</th><th>Attendance %</th></tr>";
+
+ db.ref(`branches/${currentBranch}/teachers/${currentUser}/classes/${cls}`)
+ .once("value",c=>{
+  c.child("students").forEach(st=>{
+   let sid=st.key,total=0,present=0;
+   c.child("attendance").child(sid).forEach(d=>{
+    total++;
+    if(d.val()==="Present") present++;
+   });
+   let p=total?Math.round((present/total)*100):0;
+   html+=`<tr><td>${st.val().name}</td><td>${p}%</td></tr>`;
+  });
+  html+="</table>";
+  registerBox.innerHTML=html;
+ });
+}
+
+/* -------- STUDENT -------- */
+
+function loadStudentAttendance(sid){
+ db.ref(`branches/${currentBranch}/teachers`).once("value",t=>{
+  t.forEach(tr=>{
+   tr.child("classes").forEach(c=>{
+    if(c.child("students").child(sid).exists()){
+     let total=0,present=0;
+     c.child("attendance").child(sid).forEach(d=>{
+      total++;
+      if(d.val()==="Present") present++;
+     });
+     let p=total?Math.round((present/total)*100):0;
+     attPercent.innerText="Attendance: "+p+"%";
+    }
+   });
+  });
+ });
+}
+
+function loadTeacherPublicProfile(){
+ db.ref(`branches/${currentBranch}/teachers`).once("value",t=>{
+  t.forEach(tr=>{
+   tr.child("profile").exists() &&
+   (teacherProfile.innerHTML=`
+     <b>Name:</b> ${tr.val().profile.name}<br>
+     <b>Subject:</b> ${tr.val().profile.subject}<br>
+     <a target="_blank" href="https://wa.me/${tr.val().profile.whatsapp}">
+       Chat on WhatsApp
+     </a>
+   `);
+  });
+ });
+}
+
+/* -------- AI DOUBT -------- */
+
+function askAI(){
+ let q=aiQ.value;
+
+ db.ref("ai_logs/"+currentUser).push({
+  question:q,
+  time:Date.now()
+ });
+
+ aiA.innerHTML=
+  "🤖 AI Suggestion:<br>" +
+  "Is question ko step-by-step padhiye.<br>" +
+  "Concept clear na ho to example likhiye.<br><br>" +
+  `<a target="_blank" href="https://www.google.com/search?q=${encodeURIComponent(q)}">Google</a><br>` +
+  `<a target="_blank" href="https://www.youtube.com/results?search_query=${encodeURIComponent(q)}">YouTube</a>`;
+}
+
+/* -------- FACE ATTENDANCE (DEMO) -------- */
+
+function startCam(){
+ navigator.mediaDevices.getUserMedia({video:true})
+ .then(s=>cam.srcObject=s);
+}
+
+function markFaceAttendance(){
+ let d=new Date().toISOString().slice(0,10);
+ db.ref(`attendance_demo/${currentUser}/${d}`).set("Present");
+ alert("Attendance marked (demo)");
+}
+
+/* LOGOUT */
+function logout(){
+ currentUser=""; currentRole="";
+ show("login");
+}
+</script>
+
+</body>
+</html><!-- Firebase SDKs (NO import, GitHub Pages compatible) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+  // 🔥 Your Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyAuW-_QhchJ0wGQKJzYvqCQO8UL9CBJq4E",
+    authDomain: "student-best-ai-teacher.firebaseapp.com",
+    databaseURL: "https://student-best-ai-teacher-default-rtdb.firebaseio.com",
+    projectId: "student-best-ai-teacher",
+    storageBucket: "student-best-ai-teacher.appspot.com",
+    messagingSenderId: "983601405082",
+    appId: "1:983601405082:web:44aaa73bb73470c21f9323",
+    measurementId: "G-ENDC7QGHQ1"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+
+  // Optional: Analytics
+  firebase.analytics();
+
+  // Realtime Database reference
+  const db = firebase.database();
+</script>;
 
   }catch(e){
     ans.innerText = "AI error aaya";

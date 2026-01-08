@@ -204,42 +204,56 @@ function show(t,c){msg.innerText=t;msg.style.color=c}
 </body>
 </html>
 <script>
-function aiReply(question) {
-  question = question.toLowerCase();
+function aiReply(q) {
+  q = q.toLowerCase();
 
-  if (question.includes("sin")) {
-    return "SinQ ka matlab hota hai: kisi right angled triangle me opposite side / hypotenuse.";
+  // 🔹 Meaning
+  if (q.includes("meaning") || q.includes("matlab")) {
+    if (q.includes("what")) return "'What' ka Hindi meaning hota hai: 'Kya'";
+    if (q.includes("who")) return "'Who' ka Hindi meaning hota hai: 'Kaun'";
+    if (q.includes("when")) return "'When' ka Hindi meaning hota hai: 'Kab'";
+    return "Is word ka meaning thoda clearly likho.";
   }
 
-  if (question.includes("prakash") || question.includes("light")) {
-    return "Prakash ka parivartan reflection aur refraction ke through hota hai.";
+  // 🔹 Gandhi Ji / History
+  if (q.includes("gandhi")) {
+    if (q.includes("paidaish") || q.includes("born")) {
+      return "Mahatma Gandhi ji ka janm 2 October 1869 ko Porbandar, Gujarat me hua tha.";
+    }
+    return "Mahatma Gandhi Bharat ke Rashtrapita the.";
   }
 
-  if (question.includes("koshika") || question.includes("cell")) {
-    return "Koshika jeev ka sabse chhota jeevit ghatak hota hai. Ye sabhi plants aur animals me hoti hai.";
+  // 🔹 Maths
+  if (q.includes("sin")) {
+    return "Sinθ = Opposite side / Hypotenuse (Right angled triangle me).";
   }
 
-  if (question.includes("english")) {
-    return "English improve karne ke liye daily reading aur speaking practice zaruri hai.";
+  // 🔹 Science
+  if (q.includes("prakash") || q.includes("light")) {
+    return "Prakash ka parivartan reflection aur refraction ke karan hota hai.";
   }
 
-  if (question.includes("math")) {
-    return "Maths me strong hone ke liye formulas yaad karo aur daily practice karo.";
+  if (q.includes("koshika") || q.includes("cell")) {
+    return "Koshika jeev ka sabse chhota jeevit unit hota hai.";
   }
 
-  return "Is question ke liye thoda specific likho (Maths, Science ya English).";
+  // 🔹 English
+  if (q.includes("english")) {
+    return "English improve karne ke liye daily reading, speaking aur writing practice zaruri hai.";
+  }
+
+  // 🔹 Default
+  return "Is sawal ko thoda clearly likho (Meaning, History, Maths, Science).";
 }
 
 function askAI() {
   const input = document.getElementById("question");
   const chat = document.getElementById("chat");
 
-  const userQ = input.value;
-  if (!userQ) return;
+  if (!input.value) return;
 
-  chat.innerHTML += `<div style="color:#00bfff">You: ${userQ}</div>`;
-  const answer = aiReply(userQ);
-  chat.innerHTML += `<div style="color:#00ff99">AI: ${answer}</div>`;
+  chat.innerHTML += `<div style="color:#00bfff">You: ${input.value}</div>`;
+  chat.innerHTML += `<div style="color:#00ff99">AI: ${aiReply(input.value)}</div>`;
 
   input.value = "";
 }

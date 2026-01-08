@@ -1,260 +1,124 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>AI Teacher – Student | Parent | Admin</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Teacher Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <style>
-body{
-  margin:0;
-  font-family:system-ui,Arial;
-  background:#0f172a;
-  color:#e5e7eb;
-}
-.container{
-  max-width:420px;
-  margin:40px auto;
-  background:#020617;
-  padding:20px;
-  border-radius:14px;
-  box-shadow:0 0 30px rgba(0,0,0,.6);
-}
-h2,h3{text-align:center}
-input,select,textarea{
-  width:100%;
-  padding:12px;
-  margin:8px 0;
-  border-radius:8px;
-  border:none;
-  outline:none;
-}
-button{
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  border:none;
-  border-radius:8px;
-  background:#2563eb;
-  color:white;
-  font-size:16px;
-  cursor:pointer;
-}
-button:hover{background:#1d4ed8}
-.secondary{background:#475569}
-.secondary:hover{background:#334155}
-.danger{background:#dc2626}
-.danger:hover{background:#b91c1c}
-.hidden{display:none}
-.card{
-  background:#020617;
-  padding:15px;
-  border-radius:10px;
-  margin-top:15px;
-}
-.msg{text-align:center;font-size:14px;margin-top:6px}
-.chat{
-  max-height:200px;
-  overflow:auto;
-  background:#020617;
-  padding:10px;
-  border-radius:10px;
-}
-.chat p{margin:6px 0}
-.user{color:#38bdf8}
-.ai{color:#22c55e}
+body{font-family:Arial;background:#0f172a;color:#fff;padding:20px}
+.card{background:#020617;padding:20px;border-radius:12px;max-width:400px;margin:auto}
+input,select,button{width:100%;padding:12px;margin:6px 0;border-radius:6px;border:none}
+button{background:#2563eb;color:#fff;font-size:16px}
+#chat{margin-top:15px}
+.ai{color:#00ff99}
+.you{color:#38bdf8}
 </style>
 </head>
 
 <body>
 
-<div class="container">
-
-<!-- AUTH -->
-<div id="authBox">
-  <h2>🎓 AI Teacher Portal</h2>
-  <input id="email" type="email" placeholder="Email">
-  <input id="password" type="password" placeholder="Password">
-
-  <select id="role">
-    <option value="student">Student</option>
-    <option value="parent">Parent</option>
-    <option value="admin">Admin</option>
-  </select>
-
-  <button onclick="signup()">Signup</button>
-  <button onclick="login()">Login</button>
-  <div class="msg" id="msg"></div>
+<div class="card" id="loginBox">
+<h2>AI Teacher Portal</h2>
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+<select id="role">
+<option>Student</option>
+<option>Teacher</option>
+</select>
+<button onclick="signup()">Signup</button>
+<button onclick="login()">Login</button>
+<p id="msg" style="color:red"></p>
 </div>
 
-<!-- DASHBOARD -->
-<div id="dash" class="hidden">
+<div class="card" id="app" style="display:none">
+<h3 id="mode"></h3>
 
-  <h3 id="welcome"></h3>
+<textarea id="notes" placeholder="Teacher Notes (Teacher only)" style="display:none"></textarea>
+<button onclick="saveNotes()" id="saveBtn" style="display:none">Save Notes</button>
 
-  <!-- RESULT -->
-  <div class="card">
-    <h4>📊 Student Result</h4>
-    <p>Name: Adnan Ahmad</p>
-    <p>Class: 10</p>
-    <p>Maths: 85</p>
-    <p>Science: 88</p>
-    <p>English: 90</p>
-    <b>Total: 263 / 300</b>
-  </div>
+<div id="chat"></div>
 
-  <!-- AI TEACHER -->
-  <div class="card">
-    <h4>🤖 AI Teacher</h4>
-    <div class="chat" id="chat"></div>
-    <textarea id="question" placeholder="Ask your question..."></textarea>
-    <button class="secondary" onclick="askAI()">Ask</button>
-  </div>
-
-  <!-- ADMIN PANEL -->
-  <div id="adminPanel" class="card hidden">
-    <h4>🛠 Admin Panel</h4>
-    <p>✔ Users monitoring (demo)</p>
-    <p>✔ Results control (demo)</p>
-    <p>✔ System secure</p>
-  </div>
-
-  <button class="danger" onclick="logout()">Logout</button>
+<input id="q" placeholder="Ask your question">
+<button onclick="ask()">Ask</button>
+<button onclick="logout()" style="background:red">Logout</button>
 </div>
-
-</div>
-
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyAuW-_QhchJ0wGQKJzYvqCQO8UL9CBJq4E",
   authDomain: "student-best-ai-teacher.firebaseapp.com",
-  projectId: "student-best-ai-teacher",
-  storageBucket: "student-best-ai-teacher.appspot.com",
-  messagingSenderId: "983601405082",
-  appId: "1:983601405082:web:6f70114f0df68a451f9323"
+  projectId: "student-best-ai-teacher"
 };
-
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-const msg = document.getElementById("msg");
-const authBox = document.getElementById("authBox");
-const dash = document.getElementById("dash");
-const welcome = document.getElementById("welcome");
-const adminPanel = document.getElementById("adminPanel");
+let teacherOnline = false;
+let savedNotes = localStorage.getItem("notes") || "";
 
 function signup(){
-  auth.createUserWithEmailAndPassword(val("email"),val("password"))
-    .then(()=>show("Signup successful","lightgreen"))
-    .catch(e=>show(e.message,"red"));
+auth.createUserWithEmailAndPassword(
+email.value,password.value
+).then(login).catch(e=>msg.innerText=e.message)
 }
 
 function login(){
-  const role = val("role");
-  auth.signInWithEmailAndPassword(val("email"),val("password"))
-    .then(()=>{
-      authBox.classList.add("hidden");
-      dash.classList.remove("hidden");
+auth.signInWithEmailAndPassword(
+email.value,password.value
+).then(()=>{
+loginBox.style.display="none";
+app.style.display="block";
+if(role.value==="Teacher"){
+teacherOnline=true;
+mode.innerText="👩‍🏫 Teacher Online";
+notes.style.display="block";
+saveBtn.style.display="block";
+notes.value=savedNotes;
+}else{
+mode.innerText="🤖 Teacher Offline → AI Teaching";
+}
+}).catch(e=>msg.innerText=e.message)
+}
 
-      welcome.innerText =
-        role==="admin" ? "🛠 Admin Dashboard" :
-        role==="parent" ? "👨‍👩‍👦 Parent Dashboard" :
-        "🎓 Student Dashboard";
+function saveNotes(){
+savedNotes=notes.value;
+localStorage.setItem("notes",savedNotes);
+alert("Notes saved");
+}
 
-      if(role==="admin") adminPanel.classList.remove("hidden");
-    })
-    .catch(e=>show(e.message,"red"));
+function ask(){
+const qn=q.value;
+chat.innerHTML+=`<div class="you">You: ${qn}</div>`;
+let ans;
+
+if(teacherOnline){
+ans="Teacher will reply live.";
+}else{
+if(savedNotes && savedNotes.toLowerCase().includes(qn.split(" ")[0].toLowerCase())){
+ans="Notes ke hisaab se jawab: "+savedNotes;
+}else{
+ans="Iska answer notes me nahi mila.";
+}
+speak(ans);
+}
+chat.innerHTML+=`<div class="ai">AI: ${ans}</div>`;
+q.value="";
+}
+
+function speak(text){
+const u=new SpeechSynthesisUtterance(text);
+speechSynthesis.speak(u);
 }
 
 function logout(){
-  auth.signOut().then(()=>{
-    dash.classList.add("hidden");
-    adminPanel.classList.add("hidden");
-    authBox.classList.remove("hidden");
-  });
+auth.signOut();
+location.reload();
 }
-
-/* SIMPLE AI TEACHER (Demo Logic) */
-function askAI(){
-  const q = document.getElementById("question").value;
-  if(!q) return;
-  const chat = document.getElementById("chat");
-
-  chat.innerHTML += `<p class="user">You: ${q}</p>`;
-
-  let answer =
-    q.toLowerCase().includes("math") ? "Practice daily and revise formulas." :
-    q.toLowerCase().includes("science") ? "Understand concepts with diagrams." :
-    q.toLowerCase().includes("english") ? "Read daily and practice writing." :
-    "I am your AI Teacher. Ask about Maths, Science or English.";
-
-  chat.innerHTML += `<p class="ai">AI: ${answer}</p>`;
-  document.getElementById("question").value="";
-  chat.scrollTop = chat.scrollHeight;
-}
-
-function val(id){return document.getElementById(id).value}
-function show(t,c){msg.innerText=t;msg.style.color=c}
 </script>
 
 </body>
 </html>
-<script>
-function aiReply(q) {
-  q = q.toLowerCase();
-
-  // 🔹 Meaning
-  if (q.includes("meaning") || q.includes("matlab")) {
-    if (q.includes("what")) return "'What' ka Hindi meaning hota hai: 'Kya'";
-    if (q.includes("who")) return "'Who' ka Hindi meaning hota hai: 'Kaun'";
-    if (q.includes("when")) return "'When' ka Hindi meaning hota hai: 'Kab'";
-    return "Is word ka meaning thoda clearly likho.";
-  }
-
-  // 🔹 Gandhi Ji / History
-  if (q.includes("gandhi")) {
-    if (q.includes("paidaish") || q.includes("born")) {
-      return "Mahatma Gandhi ji ka janm 2 October 1869 ko Porbandar, Gujarat me hua tha.";
-    }
-    return "Mahatma Gandhi Bharat ke Rashtrapita the.";
-  }
-
-  // 🔹 Maths
-  if (q.includes("sin")) {
-    return "Sinθ = Opposite side / Hypotenuse (Right angled triangle me).";
-  }
-
-  // 🔹 Science
-  if (q.includes("prakash") || q.includes("light")) {
-    return "Prakash ka parivartan reflection aur refraction ke karan hota hai.";
-  }
-
-  if (q.includes("koshika") || q.includes("cell")) {
-    return "Koshika jeev ka sabse chhota jeevit unit hota hai.";
-  }
-
-  // 🔹 English
-  if (q.includes("english")) {
-    return "English improve karne ke liye daily reading, speaking aur writing practice zaruri hai.";
-  }
-
-  // 🔹 Default
-  return "Is sawal ko thoda clearly likho (Meaning, History, Maths, Science).";
-}
-
-function askAI() {
-  const input = document.getElementById("question");
-  const chat = document.getElementById("chat");
-
-  if (!input.value) return;
-
-  chat.innerHTML += `<div style="color:#00bfff">You: ${input.value}</div>`;
-  chat.innerHTML += `<div style="color:#00ff99">AI: ${aiReply(input.value)}</div>`;
-
-  input.value = "";
-}
-</script>

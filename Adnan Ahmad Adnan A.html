@@ -308,4 +308,23 @@ async function askAI(){
     console.error(e);
   }
 }
+</script><!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAuW-_QhchJ0wGQKJzYvqCQO8UL9CBJq4E",
+    authDomain: "student-best-ai-teacher.firebaseapp.com",
+    projectId: "student-best-ai-teacher",
+    storageBucket: "student-best-ai-teacher.appspot.com",
+    messagingSenderId: "983601405082",
+    appId: "1:983601405082:web:6f70114f0df68a451f9323",
+    measurementId: "G-W47436MBF3"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  firebase.analytics();
+  const auth = firebase.auth();
 </script>

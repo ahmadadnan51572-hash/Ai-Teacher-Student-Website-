@@ -195,3 +195,763 @@ function logout(){
 
 </body>
 </html>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Institute ERP – Phase 2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<style>
+body{font-family:Arial;background:#f2f4f7;margin:0}
+header{background:#0a3d62;color:#fff;text-align:center;padding:12px}
+nav{text-align:center;background:#34495e;padding:8px}
+nav button{margin:3px;padding:8px;border:0;border-radius:4px;background:#2c3e50;color:#fff}
+section{display:none;padding:15px}
+.card{background:#fff;padding:15px;border-radius:8px;margin-bottom:12px}
+input,select,textarea,button{width:100%;padding:7px;margin:5px 0}
+button{background:#1e3799;color:#fff;border:0;border-radius:4px}
+.small{font-size:12px;color:#555}
+hr{margin:12px 0}
+</style>
+</head>
+
+<body>
+
+<header>
+<h3>Institute Management System</h3>
+<p>Phase-2 • Teacher • Students • Attendance • Notes</p>
+</header>
+
+<nav>
+<button onclick="show('login')">Login</button>
+<button onclick="logout()">Logout</button>
+</nav>
+
+<!-- LOGIN -->
+<section id="login" class="card">
+<h3>Login</h3>
+<select id="role">
+<option value="teacher">Teacher</option>
+<option value="student">Student</option>
+</select>
+<input id="uid" placeholder="User ID">
+<input id="upass" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<p id="msg" class="small"></p>
+</section>
+
+<!-- TEACHER PANEL -->
+<section id="teacherPanel" class="card">
+<h3>Teacher Panel</h3>
+
+<h4>Teacher Profile</h4>
+<input id="tSubject" placeholder="Subject">
+<input id="tWhatsapp" placeholder="WhatsApp Number">
+<button onclick="saveTeacherProfile()">Save Profile</button>
+
+<hr>
+
+<h4>Create Class / Section</h4>
+<input id="cls" placeholder="Class (eg 10)">
+<input id="sec" placeholder="Section (eg A)">
+<button onclick="createClass()">Create</button>
+
+<hr>
+
+<h4>Add Student</h4>
+<input id="sid" placeholder="Student ID">
+<input id="sname" placeholder="Student Name">
+<button onclick="addStudent()">Add Student</button>
+
+<hr>
+
+<h4>Mark Attendance</h4>
+<select id="attStudent"></select>
+<select id="attStatus">
+<option>Present</option>
+<option>Absent</option>
+</select>
+<button onclick="markAttendance()">Save Attendance</button>
+
+<hr>
+
+<h4>Add Notes</h4>
+<input id="noteTitle" placeholder="Title">
+<input id="noteLink" placeholder="PDF / Drive Link">
+<button onclick="addNote()">Add Note</button>
+
+<hr>
+
+<h4>Add YouTube Video</h4>
+<input id="vidTitle" placeholder="Video Title">
+<input id="vidLink" placeholder="YouTube Link">
+<button onclick="addVideo()">Add Video</button>
+</section>
+
+<!-- STUDENT PANEL -->
+<section id="studentPanel" class="card">
+<h3>Student Panel</h3>
+<p id="sinfo"></p>
+
+<h4>Notes</h4>
+<div id="notesBox"></div>
+
+<h4>Videos</h4>
+<div id="videosBox"></div>
+
+<h4>Attendance</h4>
+<div id="attendanceBox"></div>
+</section>
+
+<script>
+/* 🔥 FIREBASE CONFIG */
+firebase.initializeApp({
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT"
+});
+const db = firebase.database();
+
+let currentUser="", currentRole="";
+let currentClass="", currentSection="";
+
+/* NAV */
+function show(id){
+ document.querySelectorAll("section").forEach(s=>s.style.display="none");
+ document.getElementById(id).style.display="block";
+}
+show("login");
+
+/* LOGIN */
+function login(){
+ let r=role.value,id=uid.value,p=upass.value;
+ db.ref("users/"+id).once("value",s=>{
+  if(!s.exists()||s.val().password!==p||s.val().role!==r){
+   msg.innerText="Invalid login";
+   return;
+  }
+  currentUser=id; currentRole=r;
+  if(r==="teacher") show("teacherPanel");
+  if(r==="student"){
+   show("studentPanel");
+   loadStudentData(id);
+  }
+ });
+}
+
+/* TEACHER FUNCTIONS */
+function saveTeacherProfile(){
+ db.ref("teachers/"+currentUser+"/profile").set({
+  subject:tSubject.value,
+  whatsapp:tWhatsapp.value
+ });
+ alert("Profile saved");
+}
+
+function createClass(){
+ currentClass=cls.value;
+ currentSection=sec.value;
+ alert("Class set: "+currentClass+"-"+currentSection);
+ loadStudents();
+}
+
+function addStudent(){
+ let sidv=sid.value;
+ db.ref(`teachers/${currentUser}/classes/${currentClass}_${currentSection}/students/${sidv}`)
+ .set({name:sname.value});
+ loadStudents();
+}
+
+function loadStudents(){
+ attStudent.innerHTML="";
+ db.ref(`teachers/${currentUser}/classes/${currentClass}_${currentSection}/students`)
+ .once("value",s=>{
+  s.forEach(st=>{
+   attStudent.innerHTML+=`<option value="${st.key}">${st.val().name}</option>`;
+  });
+ });
+}
+
+function markAttendance(){
+ let d=new Date().toISOString().slice(0,10);
+ db.ref(`teachers/${currentUser}/classes/${currentClass}_${currentSection}/attendance/${attStudent.value}/${d}`)
+ .set(attStatus.value);
+ alert("Attendance saved");
+}
+
+function addNote(){
+ db.ref(`teachers/${currentUser}/classes/${currentClass}_${currentSection}/notes`)
+ .push({title:noteTitle.value,link:noteLink.value});
+ alert("Note added");
+}
+
+function addVideo(){
+ db.ref(`teachers/${currentUser}/classes/${currentClass}_${currentSection}/videos`)
+ .push({title:vidTitle.value,link:vidLink.value});
+ alert("Video added");
+}
+
+/* STUDENT VIEW */
+function loadStudentData(sid){
+ db.ref("teachers").once("value",t=>{
+  t.forEach(tr=>{
+   tr.child("classes").forEach(c=>{
+    c.child("students").child(sid).exists() &&
+    loadClassData(tr.key,c.key,sid);
+   });
+  });
+ });
+}
+
+function loadClassData(tid,clsSec,sid){
+ notesBox.innerHTML=""; videosBox.innerHTML=""; attendanceBox.innerHTML="";
+ db.ref(`teachers/${tid}/classes/${clsSec}/notes`).once("value",n=>{
+  n.forEach(x=>{
+   notesBox.innerHTML+=`<a href="${x.val().link}" target="_blank">${x.val().title}</a><br>`;
+  });
+ });
+ db.ref(`teachers/${tid}/classes/${clsSec}/videos`).once("value",v=>{
+  v.forEach(x=>{
+   videosBox.innerHTML+=`<a href="${x.val().link}" target="_blank">${x.val().title}</a><br>`;
+  });
+ });
+ db.ref(`teachers/${tid}/classes/${clsSec}/attendance/${sid}`).once("value",a=>{
+  a.forEach(d=>{
+   attendanceBox.innerHTML+=`${d.key}: ${d.val()}<br>`;
+  });
+ });
+}
+
+function logout(){
+ currentUser=""; currentRole="";
+ show("login");
+}
+</script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Institute ERP – Phase 3</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<style>
+body{font-family:Arial;background:#f2f4f7;margin:0}
+header{background:#0a3d62;color:#fff;text-align:center;padding:12px}
+nav{text-align:center;background:#34495e;padding:8px}
+nav button{margin:3px;padding:8px;border:0;border-radius:4px;background:#2c3e50;color:#fff}
+section{display:none;padding:15px}
+.card{background:#fff;padding:15px;border-radius:8px;margin-bottom:12px}
+input,select,textarea,button{width:100%;padding:7px;margin:5px 0}
+button{background:#1e3799;color:#fff;border:0;border-radius:4px}
+.small{font-size:12px;color:#555}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid #ccc;padding:6px;text-align:center}
+hr{margin:12px 0}
+</style>
+</head>
+
+<body>
+
+<header>
+<h3>Institute Management System</h3>
+<p>Phase-3 • Register • Attendance % • AI Doubt</p>
+</header>
+
+<nav>
+<button onclick="show('login')">Login</button>
+<button onclick="logout()">Logout</button>
+</nav>
+
+<!-- LOGIN -->
+<section id="login" class="card">
+<h3>Login</h3>
+<select id="role">
+<option value="teacher">Teacher</option>
+<option value="student">Student</option>
+</select>
+<input id="uid" placeholder="User ID">
+<input id="upass" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<p id="msg" class="small"></p>
+</section>
+
+<!-- TEACHER PANEL -->
+<section id="teacherPanel" class="card">
+<h3>Teacher Dashboard</h3>
+<div id="teacherSummary"></div>
+
+<hr>
+
+<h4>Class Register</h4>
+<select id="regClass"></select>
+<button onclick="loadRegister()">View Register</button>
+<div id="registerBox"></div>
+</section>
+
+<!-- STUDENT PANEL -->
+<section id="studentPanel" class="card">
+<h3>Student Dashboard</h3>
+<p id="sinfo"></p>
+
+<h4>Attendance Summary</h4>
+<p id="attPercent"></p>
+
+<hr>
+
+<h4>AI Doubt Solver 🤖</h4>
+<textarea id="doubt" placeholder="Apna doubt likhiye..."></textarea>
+<button onclick="solveDoubt()">Ask AI</button>
+<div id="aiAnswer" class="small"></div>
+</section>
+
+<script>
+/* 🔥 FIREBASE CONFIG */
+firebase.initializeApp({
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT"
+});
+const db = firebase.database();
+
+let currentUser="", currentRole="";
+
+/* NAV */
+function show(id){
+ document.querySelectorAll("section").forEach(s=>s.style.display="none");
+ document.getElementById(id).style.display="block";
+}
+show("login");
+
+/* LOGIN */
+function login(){
+ let r=role.value,id=uid.value,p=upass.value;
+ db.ref("users/"+id).once("value",s=>{
+  if(!s.exists()||s.val().password!==p||s.val().role!==r){
+   msg.innerText="Invalid login";
+   return;
+  }
+  currentUser=id; currentRole=r;
+  if(r==="teacher"){
+   show("teacherPanel");
+   loadTeacherDashboard();
+  }
+  if(r==="student"){
+   show("studentPanel");
+   sinfo.innerHTML=`<b>ID:</b> ${id}`;
+   loadStudentAttendance(id);
+  }
+ });
+}
+
+/* ---------------- TEACHER ---------------- */
+
+function loadTeacherDashboard(){
+ regClass.innerHTML="";
+ teacherSummary.innerHTML="";
+
+ db.ref("teachers/"+currentUser+"/classes").once("value",c=>{
+  let classCount=0, studentCount=0;
+  c.forEach(cls=>{
+   classCount++;
+   regClass.innerHTML+=`<option value="${cls.key}">${cls.key}</option>`;
+   cls.child("students").forEach(()=>studentCount++);
+  });
+  teacherSummary.innerHTML=
+   `<b>Total Classes:</b> ${classCount}<br>
+    <b>Total Students:</b> ${studentCount}`;
+ });
+}
+
+function loadRegister(){
+ let cls=regClass.value;
+ let box="<table><tr><th>Student</th><th>Attendance %</th></tr>";
+
+ db.ref(`teachers/${currentUser}/classes/${cls}`).once("value",c=>{
+  let students=c.child("students");
+  let attendance=c.child("attendance");
+
+  students.forEach(st=>{
+   let sid=st.key;
+   let total=0,present=0;
+   attendance.child(sid).forEach(d=>{
+    total++;
+    if(d.val()==="Present") present++;
+   });
+   let percent=total?Math.round((present/total)*100):0;
+   box+=`<tr><td>${st.val().name}</td><td>${percent}%</td></tr>`;
+  });
+
+  box+="</table>";
+  registerBox.innerHTML=box;
+ });
+}
+
+/* ---------------- STUDENT ---------------- */
+
+function loadStudentAttendance(sid){
+ db.ref("teachers").once("value",t=>{
+  t.forEach(tr=>{
+   tr.child("classes").forEach(c=>{
+    if(c.child("students").child(sid).exists()){
+     let total=0,present=0;
+     c.child("attendance").child(sid).forEach(d=>{
+      total++;
+      if(d.val()==="Present") present++;
+     });
+     let percent=total?Math.round((present/total)*100):0;
+     attPercent.innerHTML=`Attendance: ${percent}%`;
+    }
+   });
+  });
+ });
+}
+
+/* ---------------- AI DOUBT (BASIC) ---------------- */
+
+function solveDoubt(){
+ let q=doubt.value.toLowerCase();
+ let ans="";
+
+ if(q.includes("math")){
+  ans="Tip: Math doubt ke liye formula likh kar practice karein.";
+ }else if(q.includes("science")){
+  ans="Science me diagram aur concept samajhna zaroori hota hai.";
+ }else if(q.includes("english")){
+  ans="English improve karne ke liye daily reading karein.";
+ }else{
+  ans="Is doubt ke liye apne teacher se poochhein ya Google/YouTube refer karein.";
+ }
+
+ aiAnswer.innerHTML=
+  ans + `<br><br>
+  🔍 Helpful links:<br>
+  <a href="https://www.google.com/search?q=${encodeURIComponent(doubt.value)}" target="_blank">Google Search</a><br>
+  <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(doubt.value)}" target="_blank">YouTube Videos</a>`;
+}
+
+/* LOGOUT */
+function logout(){
+ currentUser=""; currentRole="";
+ show("login");
+}
+</script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Institute ERP – Phase 4 (Complete)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<style>
+body{font-family:Arial;background:#f2f4f7;margin:0}
+header{background:#0a3d62;color:#fff;text-align:center;padding:12px}
+nav{text-align:center;background:#34495e;padding:8px}
+nav button{margin:3px;padding:8px;border:0;border-radius:4px;background:#2c3e50;color:#fff}
+section{display:none;padding:15px}
+.card{background:#fff;padding:15px;border-radius:8px;margin-bottom:12px}
+input,select,textarea,button{width:100%;padding:7px;margin:5px 0}
+button{background:#1e3799;color:#fff;border:0;border-radius:4px}
+.small{font-size:12px;color:#555}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid #ccc;padding:6px;text-align:center}
+hr{margin:12px 0}
+video{width:100%;max-width:300px;border:1px solid #ccc}
+</style>
+</head>
+
+<body>
+
+<header>
+<h3>Institute Management System</h3>
+<p>Phase-4 • Multi-Branch • AI • Face Attendance</p>
+</header>
+
+<nav>
+<button onclick="show('login')">Login</button>
+<button onclick="logout()">Logout</button>
+</nav>
+
+<!-- LOGIN -->
+<section id="login" class="card">
+<h3>Login</h3>
+
+<select id="branch">
+<option value="main">Main Branch</option>
+<option value="branch1">Branch 1</option>
+</select>
+
+<select id="role">
+<option value="teacher">Teacher</option>
+<option value="student">Student</option>
+</select>
+
+<input id="uid" placeholder="User ID">
+<input id="upass" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<p id="msg" class="small"></p>
+</section>
+
+<!-- TEACHER PANEL -->
+<section id="teacherPanel" class="card">
+<h3>Teacher Dashboard</h3>
+<div id="teacherSummary"></div>
+
+<hr>
+
+<h4>Teacher Profile</h4>
+<input id="tName" placeholder="Name">
+<input id="tSubject" placeholder="Subject">
+<input id="tWhatsapp" placeholder="WhatsApp Number">
+<button onclick="saveTeacherProfile()">Save Profile</button>
+
+<hr>
+
+<h4>My Classes</h4>
+<select id="regClass"></select>
+<button onclick="loadRegister()">View Class Register</button>
+<div id="registerBox"></div>
+
+<hr>
+
+<h4>Face Attendance (Demo)</h4>
+<video id="cam" autoplay></video>
+<button onclick="startCam()">Open Camera</button>
+<button onclick="markFaceAttendance()">Mark Attendance</button>
+</section>
+
+<!-- STUDENT PANEL -->
+<section id="studentPanel" class="card">
+<h3>Student Dashboard</h3>
+<p id="sinfo"></p>
+
+<h4>Attendance %</h4>
+<p id="attPercent"></p>
+
+<hr>
+
+<h4>Teacher Profile</h4>
+<div id="teacherProfile"></div>
+
+<hr>
+
+<h4>AI Doubt Solver 🤖</h4>
+<textarea id="aiQ" placeholder="Apna doubt likhiye..."></textarea>
+<button onclick="askAI()">Ask AI</button>
+<div id="aiA" class="small"></div>
+</section>
+
+<script>
+/* 🔥 FIREBASE CONFIG (PASTE YOUR OWN) */
+firebase.initializeApp({
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT"
+});
+const db = firebase.database();
+
+/* GLOBAL STATE */
+let currentUser="", currentRole="", currentBranch="";
+
+/* NAV */
+function show(id){
+ document.querySelectorAll("section").forEach(s=>s.style.display="none");
+ document.getElementById(id).style.display="block";
+}
+show("login");
+
+/* LOGIN */
+function login(){
+ currentBranch = branch.value;
+ let r=role.value,id=uid.value,p=upass.value;
+
+ db.ref("users/"+id).once("value",s=>{
+  if(!s.exists() || s.val().password!==p || s.val().role!==r){
+   msg.innerText="Invalid login";
+   return;
+  }
+
+  currentUser=id;
+  currentRole=r;
+
+  if(r==="teacher"){
+   show("teacherPanel");
+   loadTeacherDashboard();
+  }
+
+  if(r==="student"){
+   show("studentPanel");
+   sinfo.innerHTML=`<b>ID:</b> ${id}`;
+   loadStudentAttendance(id);
+   loadTeacherPublicProfile();
+  }
+ });
+}
+
+/* -------- TEACHER -------- */
+
+function saveTeacherProfile(){
+ db.ref(`branches/${currentBranch}/teachers/${currentUser}/profile`)
+ .set({
+  name:tName.value,
+  subject:tSubject.value,
+  whatsapp:tWhatsapp.value
+ });
+ alert("Profile saved");
+}
+
+function loadTeacherDashboard(){
+ regClass.innerHTML="";
+ teacherSummary.innerHTML="";
+
+ db.ref(`branches/${currentBranch}/teachers/${currentUser}/classes`)
+ .once("value",c=>{
+  let clsCount=0;
+  c.forEach(x=>{
+   clsCount++;
+   regClass.innerHTML+=`<option value="${x.key}">${x.key}</option>`;
+  });
+  teacherSummary.innerHTML=`<b>Total Classes:</b> ${clsCount}`;
+ });
+}
+
+function loadRegister(){
+ let cls=regClass.value;
+ let html="<table><tr><th>Student</th><th>Attendance %</th></tr>";
+
+ db.ref(`branches/${currentBranch}/teachers/${currentUser}/classes/${cls}`)
+ .once("value",c=>{
+  c.child("students").forEach(st=>{
+   let sid=st.key,total=0,present=0;
+   c.child("attendance").child(sid).forEach(d=>{
+    total++;
+    if(d.val()==="Present") present++;
+   });
+   let p=total?Math.round((present/total)*100):0;
+   html+=`<tr><td>${st.val().name}</td><td>${p}%</td></tr>`;
+  });
+  html+="</table>";
+  registerBox.innerHTML=html;
+ });
+}
+
+/* -------- STUDENT -------- */
+
+function loadStudentAttendance(sid){
+ db.ref(`branches/${currentBranch}/teachers`).once("value",t=>{
+  t.forEach(tr=>{
+   tr.child("classes").forEach(c=>{
+    if(c.child("students").child(sid).exists()){
+     let total=0,present=0;
+     c.child("attendance").child(sid).forEach(d=>{
+      total++;
+      if(d.val()==="Present") present++;
+     });
+     let p=total?Math.round((present/total)*100):0;
+     attPercent.innerText="Attendance: "+p+"%";
+    }
+   });
+  });
+ });
+}
+
+function loadTeacherPublicProfile(){
+ db.ref(`branches/${currentBranch}/teachers`).once("value",t=>{
+  t.forEach(tr=>{
+   tr.child("profile").exists() &&
+   (teacherProfile.innerHTML=`
+     <b>Name:</b> ${tr.val().profile.name}<br>
+     <b>Subject:</b> ${tr.val().profile.subject}<br>
+     <a target="_blank" href="https://wa.me/${tr.val().profile.whatsapp}">
+       Chat on WhatsApp
+     </a>
+   `);
+  });
+ });
+}
+
+/* -------- AI DOUBT -------- */
+
+function askAI(){
+ let q=aiQ.value;
+
+ db.ref("ai_logs/"+currentUser).push({
+  question:q,
+  time:Date.now()
+ });
+
+ aiA.innerHTML=
+  "🤖 AI Suggestion:<br>" +
+  "Is question ko step-by-step padhiye.<br>" +
+  "Concept clear na ho to example likhiye.<br><br>" +
+  `<a target="_blank" href="https://www.google.com/search?q=${encodeURIComponent(q)}">Google</a><br>` +
+  `<a target="_blank" href="https://www.youtube.com/results?search_query=${encodeURIComponent(q)}">YouTube</a>`;
+}
+
+/* -------- FACE ATTENDANCE (DEMO) -------- */
+
+function startCam(){
+ navigator.mediaDevices.getUserMedia({video:true})
+ .then(s=>cam.srcObject=s);
+}
+
+function markFaceAttendance(){
+ let d=new Date().toISOString().slice(0,10);
+ db.ref(`attendance_demo/${currentUser}/${d}`).set("Present");
+ alert("Attendance marked (demo)");
+}
+
+/* LOGOUT */
+function logout(){
+ currentUser=""; currentRole="";
+ show("login");
+}
+</script>
+
+</body>
+</html><!-- Firebase SDKs (NO import, GitHub Pages compatible) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+  // 🔥 Your Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyAuW-_QhchJ0wGQKJzYvqCQO8UL9CBJq4E",
+    authDomain: "student-best-ai-teacher.firebaseapp.com",
+    databaseURL: "https://student-best-ai-teacher-default-rtdb.firebaseio.com",
+    projectId: "student-best-ai-teacher",
+    storageBucket: "student-best-ai-teacher.appspot.com",
+    messagingSenderId: "983601405082",
+    appId: "1:983601405082:web:44aaa73bb73470c21f9323",
+    measurementId: "G-ENDC7QGHQ1"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+
+  // Optional: Analytics
+  firebase.analytics();
+
+  // Realtime Database reference
+  const db = firebase.database();
+</script>

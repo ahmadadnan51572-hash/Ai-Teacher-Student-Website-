@@ -932,26 +932,3 @@ function logout(){
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-<script>
-  // 🔥 Your Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyAuW-_QhchJ0wGQKJzYvqCQO8UL9CBJq4E",
-    authDomain: "student-best-ai-teacher.firebaseapp.com",
-    databaseURL: "https://student-best-ai-teacher-default-rtdb.firebaseio.com",
-    projectId: "student-best-ai-teacher",
-    storageBucket: "student-best-ai-teacher.appspot.com",
-    messagingSenderId: "983601405082",
-    appId: "1:983601405082:web:44aaa73bb73470c21f9323",
-    measurementId: "G-ENDC7QGHQ1"
-  };
-
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-
-  // Optional: Analytics
-  firebase.analytics();
-
-  // Realtime Database reference
-  const db = firebase.database();
-</script>
